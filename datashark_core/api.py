@@ -16,16 +16,21 @@ class Object(dict):
     ):
         super().__init__()
         self['uuid'] = str(uuid4())
-        self['parent'] = parent
+        self['parent'] = str(parent)
         self['filepath'] = Path(filepath)
 
     @property
-    def uuid(self):
+    def uuid(self) -> str:
         """Unique Identifier for this object"""
         return self['uuid']
 
     @property
-    def filepath(self):
+    def parent(self) -> str:
+        """Unique Identifier for this object"""
+        return self['parent']
+
+    @property
+    def filepath(self) -> Path:
         """Filepath of the object to be processed"""
         return self['filepath']
 
@@ -58,16 +63,16 @@ class Result(dict):
         self['status'] = status
 
     @property
-    def plugin(self):
+    def plugin(self) -> str:
         """Name of the plugin producing this result"""
         return self['plugin']
 
     @property
-    def object(self):
+    def object(self) -> Object:
         """Processed object"""
         return self['object']
 
     @property
-    def status(self):
+    def status(self) -> Status:
         """Overall status of processed object"""
         return self['status']

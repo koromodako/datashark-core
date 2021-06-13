@@ -32,13 +32,13 @@ NAME_RE = re.compile(r'\w+')
 
 class PluginMeta(type):
     """Datashark plugin metaclass"""
-    PLUGINS = {}
     MANDATORY = {
         'NAME',
         'DEPENDS_ON',
         'DESCRIPTION',
         'YARA_RULE_BODY'
     }
+    REGISTERED = {}
 
     def __new__(cls, name, bases, dct):
         # build new class
@@ -57,11 +57,11 @@ class PluginMeta(type):
             raise ValueError(
                 f"class '{name}' NAME attribute must validate regexp '{NAME_RE.pattern}'!"
             )
-        if dct_name in PluginMeta.PLUGINS:
+        if dct_name in PluginMeta.REGISTERED:
             raise ValueError(
                 f"class '{name}' NAME already registered by another plugin!"
             )
-        PluginMeta.PLUGINS[dct_name] = ncls
+        PluginMeta.REGISTERED[dct_name] = ncls
         # finally return new class
         return ncls
 

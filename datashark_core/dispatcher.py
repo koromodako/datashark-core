@@ -14,7 +14,7 @@ DS_DISPATCH_JOBS = Queue('ds_dispatch_jobs', connection=REDIS_CONN)
 def _dispatch(obj: Object):
     """Enqueue a plugin job"""
     for name in matching_plugins(obj):
-        plugin = PluginMeta.PLUGINS[name]
+        plugin = PluginMeta.REGISTERED[name]
         DS_PLUGIN_JOBS.enqueue(plugin.process, obj)
 
 

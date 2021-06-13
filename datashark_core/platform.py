@@ -3,9 +3,9 @@
 from pathlib import Path
 from tempfile import gettempdir
 
-CACHE_DIR = Path.home().joinpath('.cache', 'datashark')
-CONFIG_DIR = Path.home().joinpath('.config', 'datashark')
-CONFIG_PATH = CONFIG_DIR.joinpath('datashark.yml')
+CACHE_DIR = Path.home() / '.cache' / 'datashark'
+CONFIG_DIR = Path.home() / '.config' / 'datashark'
+CONFIG_PATH = CONFIG_DIR / 'datashark.yml'
 
 
 def get_cache_dir(dirname):
