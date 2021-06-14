@@ -37,14 +37,16 @@ class LoggingManager:
         return logger
 
 
+RICH_HANDLER = RichHandler(
+    omit_repeated_times=False,
+    rich_tracebacks=True,
+    markup=False,
+)
+RICH_HANDLER.setLevel(DEBUG)
+
 basicConfig(
-    level=INFO,
     format='%(message)s',
     datefmt='[%Y-%m-%dT%H:%M:%S]',
-    handlers=[
-        RichHandler(
-            omit_repeated_times=False, markup=False, rich_tracebacks=True
-        )
-    ],
+    handlers=[RICH_HANDLER],
 )
 LOGGING_MANAGER = LoggingManager('datashark')

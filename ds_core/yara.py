@@ -2,11 +2,12 @@
 """
 import yara
 from . import LOGGER
-from .api import Object
+from .api import Artifact
 from .plugin import PluginMeta
 from .platform import get_cache_dir
 
-CACHE_FILE = cache_file = get_cache_dir('yara') / 'rules'
+CACHE_FILE = get_cache_dir('yara') / 'rules'
+
 
 def update_cached_rules():
     LOGGER.debug("updating cached rules...")
@@ -17,7 +18,8 @@ def update_cached_rules():
     rules = yara.compile(source=rules_as_text)
     rules.save(str(CACHE_FILE))
 
-def matching_plugins(obj: Object):
+
+def matching_plugins(artifact: Artifact):
     rules = yara.load(str(CACHE_FILE))
-    results = rules.match(str(obj.filepath))
+    results = rules.match(str(artifact.filepath))
     return {result.rule for result in results if result.matches}
