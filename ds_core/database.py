@@ -18,8 +18,8 @@ class Format(Enum):
     SLACK = 'slack'
     # a directory
     DIR = 'dir'
-    # raw disk
-    RAW = 'raw'
+    # sleuthkit-supported format
+    TSK = 'tsk'
     # partition
     PART = 'part'
     # VHD virtual disk

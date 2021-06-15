@@ -27,8 +27,9 @@ import re
 from abc import ABCMeta, abstractmethod
 from importlib.metadata import entry_points
 from textwrap import dedent, indent
-from . import LOGGER
+from . import LOGGER, BANNER
 from .api import Artifact, Result
+from .database import register_artifact, Format
 
 NAME_RE = re.compile(r'\w+')
 
@@ -107,7 +108,20 @@ class Plugin(metaclass=ABCMeta):
 
 
 def load_installed_plugins():
+    """Dynamically load installed plugins"""
     eps = entry_points()
     for entry_point in eps.get('datashark_plugin', []):
         LOGGER.debug("loading plugin %s ...", entry_point.name)
         entry_point.load()
+
+def test_plugin(plugin: Plugin, fmt: Format):
+    """Common test function for plugins"""
+    from pathlib import Path
+    from argparse import ArgumentParser
+
+    LOGGER.info(BANNER)
+    parser = ArgumentParser()
+    parser.add_argument('filepath', type=Path, help="Path of the file to be used to test plugin")
+    args = parser.parse_args()
+    artifact = register_artifact(fmt, str(args.filepath.absolute()))
+    plugin.process(artifact)
