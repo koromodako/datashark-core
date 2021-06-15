@@ -1,13 +1,16 @@
 """Database-related helpers
 """
 from enum import Enum
-from typing import Optional
+from pprint import pformat
+from typing import Set, Dict, Union, Optional
 from yarl import URL
 from . import LOGGER
 from .api import Artifact
 
 
 class Format(Enum):
+    # raw disk data
+    RAW = 'raw'
     # undefined data format
     DATA = 'data'
     # a file
@@ -30,11 +33,11 @@ class Format(Enum):
     FAT12 = 'fat12'
     FAT16 = 'fat16'
     FAT32 = 'fat32'
-    FATX = 'fatx' # one of FAT file systems
+    FATX = 'fatx'  # one of FAT file systems
     # HFS file systems
     HFS = 'hfs'
     HFS_LEGACY = 'hfslegacy'
-    HFSX = 'hfsx' # one of HFS file systems
+    HFSX = 'hfsx'  # one of HFS file systems
     # APFS file system
     APFS = 'apfs'
     # NTFS file system
@@ -43,7 +46,7 @@ class Format(Enum):
     UFS1 = 'ufs1'
     UFS1B = 'ufs1b'
     UFS2 = 'ufs2'
-    UFSX = 'ufsx' # one of HFS file systems
+    UFSX = 'ufsx'  # one of HFS file systems
     # EXT file systems
     EXT2 = 'ext2'
     EXT3 = 'ext3'
@@ -141,5 +144,23 @@ def register_artifact(
         query=artifact_query,
     )
     artifact = Artifact(url, parent)
+    # TODO: database registration of newly created artifact
     LOGGER.info("registered new artifact: %s", artifact)
     return artifact
+
+def register_artifact_tags(artifact: Artifact, tags: Set[str]):
+    """Add tags related to an artifact"""
+    # TODO: database registration of tags
+    LOGGER.info("registered artifact tags: %s -> %s", artifact, tags)
+
+def register_artifact_properties(
+    artifact: Artifact,
+    properties: Dict[str, Union[bytes,bytearray,str,int,float]],
+):
+    """Add properties related to an artifact"""
+    # TODO: database registration of properties
+    LOGGER.info(
+        "registered artifact properties: %s -> %s",
+        artifact,
+        pformat(properties),
+    )

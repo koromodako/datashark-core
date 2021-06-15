@@ -3,17 +3,25 @@
 from enum import Enum
 from uuid import uuid4, UUID
 from pathlib import Path
-from typing import Union, Optional
+from typing import Optional
 from yarl import URL
 from .config import CONFIG
 from .platform import get_temp_dir
 
-PROCESSING_DIR = Path(CONFIG.get_(
-    'datashark', 'service', 'processing', 'directory', default=get_temp_dir()
-))
+PROCESSING_DIR = Path(
+    CONFIG.get_(
+        'datashark',
+        'service',
+        'processing',
+        'directory',
+        default=get_temp_dir(),
+    )
+)
+
 
 class ArtifactURL:
     """Artifact url"""
+
     def __init__(self, url: URL):
         self._url = url
 
@@ -28,6 +36,7 @@ class ArtifactURL:
 
 class Artifact(dict):
     """Keeps track of an artifact to be processed"""
+
     LOCALHOST = 'localhost'
 
     def __init__(
@@ -41,9 +50,7 @@ class Artifact(dict):
         self['parent'] = parent.uuid if parent else None
 
     def __repr__(self):
-        return (
-            f"Artifact(uuid='{self.uuid}', parent='{self.parent}', url='{self.url.human_repr()}')"
-        )
+        return f"Artifact(uuid='{self.uuid}', parent='{self.parent}', url='{self.url.human_repr()}')"
 
     @property
     def uuid(self) -> UUID:
@@ -88,12 +95,12 @@ class Result(dict):
 
     def __init__(
         self,
-        plugin: str,
+        plugin: 'Plugin',
         status: Status,
         artifact: Artifact,
     ):
         super().__init__()
-        self['plugin'] = plugin
+        self['plugin'] = plugin.name
         self['status'] = status
         self['artifact'] = artifact
 

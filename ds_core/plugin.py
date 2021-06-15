@@ -114,6 +114,7 @@ def load_installed_plugins():
         LOGGER.debug("loading plugin %s ...", entry_point.name)
         entry_point.load()
 
+
 def test_plugin(plugin: Plugin, fmt: Format):
     """Common test function for plugins"""
     from pathlib import Path
@@ -121,7 +122,11 @@ def test_plugin(plugin: Plugin, fmt: Format):
 
     LOGGER.info(BANNER)
     parser = ArgumentParser()
-    parser.add_argument('filepath', type=Path, help="Path of the file to be used to test plugin")
+    parser.add_argument(
+        'filepath',
+        type=Path,
+        help="Path of the file to be used to test plugin",
+    )
     args = parser.parse_args()
     artifact = register_artifact(fmt, str(args.filepath.absolute()))
     plugin.process(artifact)
