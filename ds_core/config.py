@@ -4,6 +4,8 @@ from pathlib import Path
 from ruamel.yaml import safe_load
 from . import LOGGER
 
+DEFAULT_CONFIG_PATH = Path.home() / '.config' / 'datashark' / 'datashark.yml'
+
 
 class DSConfigurationError(Exception):
     """Error raised when a configuration error occurs"""

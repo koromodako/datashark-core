@@ -4,9 +4,9 @@ from rq import Queue
 from . import LOGGER
 from .api import Artifact
 from .yara import matching_plugins
-from .meta import PluginMeta
 from .config import DSConfiguration
 from .redis import REDIS
+from .plugin.meta import PluginMeta
 
 DS_PLUGIN_JOBS = Queue('ds_plugin_jobs', connection=REDIS)
 DS_DISPATCH_JOBS = Queue('ds_dispatch_jobs', connection=REDIS)

@@ -31,7 +31,7 @@ from textwrap import dedent
 from yarl import URL
 from .. import LOGGER, BANNER
 from ..api import Artifact, Result
-from ..config import DSConfiguration
+from ..config import DSConfiguration, DEFAULT_CONFIG_PATH
 from ..database import (
     Format,
     Session,
@@ -165,7 +165,13 @@ def _test_app_parse_args():
     from argparse import ArgumentParser
 
     parser = ArgumentParser()
-    parser.add_argument('config', type=Path, help="Configuration file")
+    parser.add_argument(
+        '--config',
+        '-c',
+        type=Path,
+        default=DEFAULT_CONFIG_PATH,
+        help="Configuration file",
+    )
     parser.add_argument(
         'filepath',
         type=Path,

@@ -5,8 +5,8 @@ from textwrap import dedent, indent
 import yara
 from . import LOGGER
 from .api import Artifact
-from .meta import PluginMeta
 from .config import DSConfiguration
+from .plugin.meta import PluginMeta
 
 
 def rules_cache_from_config(config: DSConfiguration) -> Path:
