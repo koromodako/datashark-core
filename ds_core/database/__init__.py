@@ -2,10 +2,17 @@
 """
 from enum import Enum
 from pprint import pformat
-from typing import Set, Dict, Union, Optional
+from typing import Set, List, Dict, Union, Optional
 from yarl import URL
-from . import LOGGER
-from .api import Artifact
+from .. import LOGGER
+from ..api import Artifact
+from ..dispatcher import enqueue_dispatch
+from .object import (
+    Session,
+    DSArtifact,
+    DSArtifactTag,
+    DSArtifactProperty,
+)
 
 
 class Format(Enum):
@@ -122,7 +129,64 @@ class Compression(Enum):
     BZIP2 = 'bzip2'
 
 
+def _get_one(session: Session, obj_cls, **kwargs):
+    """Retrieve exactly one object from database or raise"""
+    return session.query(obj_cls).filter_by(**kwargs).one()
+
+
+def _get_or_make(session: Session, obj_cls, **kwargs):
+    """Retrieve object from database or make a new one"""
+    obj = session.query(obj_cls).filter_by(**kwargs).one_or_none()
+    if obj:
+        return obj
+    return obj_cls(**kwargs)
+
+
+def _backend_register_artifact(session: Session, artifact: Artifact):
+    """Register artifact in database"""
+    session.add(
+        DSArtifact(
+            uuid=str(artifact.uuid),
+            parent=str(artifact.parent),
+            url=artifact.url.human_repr(),
+        )
+    )
+
+
+def _backend_register_artifact_tags(
+    session: Session,
+    artifact: Artifact,
+    tags: Union[List[str], Set[str]],
+):
+    """Register artifact tags in database"""
+    ds_artifact = _get_one(session, DSArtifact, uuid=str(artifact.uuid))
+    for tag in tags:
+        tag = _get_or_make(session, DSArtifactTag, value=tag)
+        ds_artifact.tags.append(tag)
+    session.add(ds_artifact)
+
+
+def _backend_register_artifact_properties(
+    session: Session,
+    artifact: Artifact,
+    properties: Dict[str, Union[bytes, bytearray, str, int, float]],
+):
+    """Register artifact properties in database"""
+    ds_artifact = _get_one(session, DSArtifact, uuid=str(artifact.uuid))
+    for key, value in properties.items():
+        ds_artifact.properties.append(
+            DSArtifactProperty(key=key, value=str(value))
+        )
+    session.add(ds_artifact)
+
+
+def get_session():
+    """Create a new session"""
+    return Session()
+
+
 def register_artifact(
+    session: Session,
     fmt: Format,
     artifact_path: str,
     artifact_query: Optional[dict] = None,
@@ -144,21 +208,29 @@ def register_artifact(
         query=artifact_query,
     )
     artifact = Artifact(url, parent)
-    # TODO: database registration of newly created artifact
+    _backend_register_artifact(session, artifact)
     LOGGER.info("registered new artifact: %s", artifact)
+    enqueue_dispatch(artifact)
     return artifact
 
-def register_artifact_tags(artifact: Artifact, tags: Set[str]):
+
+def register_artifact_tags(
+    session: Session,
+    artifact: Artifact,
+    tags: Union[List[str], Set[str]],
+):
     """Add tags related to an artifact"""
-    # TODO: database registration of tags
+    _backend_register_artifact_tags(session, artifact, set(tags))
     LOGGER.info("registered artifact tags: %s -> %s", artifact, tags)
 
+
 def register_artifact_properties(
+    session: Session,
     artifact: Artifact,
-    properties: Dict[str, Union[bytes,bytearray,str,int,float]],
+    properties: Dict[str, Union[bytes, bytearray, str, int, float]],
 ):
     """Add properties related to an artifact"""
-    # TODO: database registration of properties
+    _backend_register_artifact_properties(session, artifact, properties)
     LOGGER.info(
         "registered artifact properties: %s -> %s",
         artifact,

@@ -3,7 +3,7 @@
 import yara
 from . import LOGGER
 from .api import Artifact
-from .plugin import PluginMeta
+from .meta import PluginMeta
 from .platform import get_cache_dir
 
 CACHE_FILE = get_cache_dir('yara') / 'rules'

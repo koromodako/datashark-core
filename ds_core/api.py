@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import Optional
 from yarl import URL
 from .config import CONFIG
-from .platform import get_temp_dir
+from .platform import get_case_dir
 
 PROCESSING_DIR = Path(
     CONFIG.get_(
@@ -14,7 +14,8 @@ PROCESSING_DIR = Path(
         'service',
         'processing',
         'directory',
-        default=get_temp_dir(),
+        type=Path,
+        default=get_case_dir('processing'),
     )
 )
 

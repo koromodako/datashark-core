@@ -1,14 +1,14 @@
 """Dispatcher-related helpers
 """
 from rq import Queue
-from redis import Redis
+from . import LOGGER
 from .api import Artifact
 from .yara import matching_plugins
-from .plugin import PluginMeta
+from .meta import PluginMeta
+from .redis import REDIS
 
-REDIS_CONN = Redis()
-DS_PLUGIN_JOBS = Queue('ds_plugin_jobs', connection=REDIS_CONN)
-DS_DISPATCH_JOBS = Queue('ds_dispatch_jobs', connection=REDIS_CONN)
+DS_PLUGIN_JOBS = Queue('ds_plugin_jobs', connection=REDIS)
+DS_DISPATCH_JOBS = Queue('ds_dispatch_jobs', connection=REDIS)
 
 
 def _process(name: str, artifact: Artifact):
@@ -20,18 +20,20 @@ def _dispatch(artifact: Artifact):
     """Enqueue a plugin job"""
     jobs = []
     for name in matching_plugins(artifact):
-        jobs.append(
-            DS_PLUGIN_JOBS.enqueue(
-                _process,
-                args=(
-                    name,
-                    artifact,
-                ),
-            )
+        job = DS_PLUGIN_JOBS.enqueue(
+            _process,
+            args=(
+                name,
+                artifact,
+            ),
         )
+        LOGGER.info("new plugin %s job %s for %s", name, job.id, artifact)
+        jobs.append(job)
     return jobs
 
 
 def enqueue_dispatch(artifact: Artifact):
     """Enqueue a dispatch job"""
-    return DS_DISPATCH_JOBS.enqueue(_dispatch, artifact)
+    job = DS_DISPATCH_JOBS.enqueue(_dispatch, artifact)
+    LOGGER.info("new dispatch job %s for %s", job.id, artifact)
+    return job
