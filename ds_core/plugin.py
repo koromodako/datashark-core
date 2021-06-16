@@ -28,7 +28,7 @@ from importlib.metadata import entry_points
 from textwrap import dedent, indent
 from . import LOGGER, BANNER
 from .api import Artifact, Result
-from .database import register_artifact, Format
+from .database import Session, register_artifact, Format
 
 
 class Plugin(metaclass=ABCMeta):
@@ -65,7 +65,7 @@ class Plugin(metaclass=ABCMeta):
         )
 
     @abstractmethod
-    def process(self, obj: Artifact) -> Result:
+    def process(self, session: Session, artifact: Artifact) -> Result:
         """
         This method will be called only if plugin's YARA_RULE_BODY matched for
         given object meaning that it is worth trying to process.
@@ -93,5 +93,7 @@ def test_plugin(plugin: Plugin, fmt: Format):
         help="Path of the file to be used to test plugin",
     )
     args = parser.parse_args()
-    artifact = register_artifact(fmt, str(args.filepath.absolute()))
-    plugin.process(artifact)
+    with Session() as session:
+        artifact = register_artifact(session, fmt, str(args.filepath.absolute()))
+        plugin.process(session, artifact)
+        session.commit()

@@ -180,11 +180,6 @@ def _backend_register_artifact_properties(
     session.add(ds_artifact)
 
 
-def get_session():
-    """Create a new session"""
-    return Session()
-
-
 def register_artifact(
     session: Session,
     fmt: Format,
