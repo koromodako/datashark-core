@@ -5,6 +5,7 @@ from . import LOGGER
 from .api import Artifact
 from .yara import matching_plugins
 from .meta import PluginMeta
+from .config import DSConfiguration
 from .redis import REDIS
 
 DS_PLUGIN_JOBS = Queue('ds_plugin_jobs', connection=REDIS)
@@ -16,24 +17,18 @@ def _process(name: str, artifact: Artifact):
     return plugin.process(artifact)
 
 
-def _dispatch(artifact: Artifact):
+def _dispatch(config: DSConfiguration, artifact: Artifact):
     """Enqueue a plugin job"""
     jobs = []
-    for name in matching_plugins(artifact):
-        job = DS_PLUGIN_JOBS.enqueue(
-            _process,
-            args=(
-                name,
-                artifact,
-            ),
-        )
+    for name in matching_plugins(config, artifact):
+        job = DS_PLUGIN_JOBS.enqueue(_process, args=(name, artifact))
         LOGGER.info("new plugin %s job %s for %s", name, job.id, artifact)
         jobs.append(job)
     return jobs
 
 
-def enqueue_dispatch(artifact: Artifact):
+def enqueue_dispatch(config: DSConfiguration, artifact: Artifact):
     """Enqueue a dispatch job"""
-    job = DS_DISPATCH_JOBS.enqueue(_dispatch, artifact)
+    job = DS_DISPATCH_JOBS.enqueue(_dispatch, args=(config, artifact))
     LOGGER.info("new dispatch job %s for %s", job.id, artifact)
     return job

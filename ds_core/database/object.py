@@ -8,33 +8,17 @@ from sqlalchemy import (
     ForeignKey,
 )
 from sqlalchemy.orm import (
-    declarative_base,
-    sessionmaker,
+    Session,
     relationship,
+    declarative_base,
 )
 from sqlalchemy.engine import create_engine
 from .. import LOGGER
 from ..redis import REDIS
-from ..config import CONFIG
-from ..platform import get_case_dir
+from ..config import DSConfiguration
 
-ENGINE_URL = CONFIG.get_(
-    'datashark',
-    'database',
-    'url',
-    default=None,
-)
-
-if not ENGINE_URL:
-    DEFAULT_DB = get_case_dir('db') / 'datashark.db'
-    DEFAULT_DB.touch()
-    ENGINE_URL = f'sqlite:///{DEFAULT_DB}'
-
-LOGGER.info("creating engine using %s", ENGINE_URL)
-ENGINE = create_engine(ENGINE_URL)
 
 Base = declarative_base()
-Session = sessionmaker(bind=ENGINE)
 
 artifact_tag_rel = Table(
     'artifact_tag_rel',
@@ -76,5 +60,13 @@ class DSArtifact(Base):
     properties = relationship('DSArtifactProperty')
 
 
-with REDIS.lock('database-init.lock', blocking_timeout=None):
-    Base.metadata.create_all(ENGINE)
+def init_database_session(config: DSConfiguration) -> Session:
+    LOGGER.info("waiting for init_database_session lock...")
+    with REDIS.lock('init_database_session.lock', blocking_timeout=None):
+        engine_url = config.get('datashark.core.database.url')
+        LOGGER.info("lock acquired, creating engine for: %s", engine_url)
+        engine = create_engine(engine_url)
+        LOGGER.info("creating database schema if necessary...")
+        Base.metadata.create_all(engine)
+        LOGGER.info("creating a new session...")
+        return Session(engine)

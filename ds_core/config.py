@@ -1,57 +1,50 @@
 """Configuration-related functions
 """
-import sys
+from pathlib import Path
 from ruamel.yaml import safe_load
 from . import LOGGER
-from .platform import CONFIG_PATH
 
 
-class Config(dict):
+class DSConfigurationError(Exception):
+    """Error raised when a configuration error occurs"""
+
+
+class DSConfiguration:
     """Configuration object"""
 
-    @classmethod
-    def load(cls, filepath):
-        """Build a Config instance from a file"""
-        if not filepath.is_file():
+    def __init__(self, filepath: Path):
+        if filepath.is_file():
+            data = safe_load(filepath.read_text())
+        else:
             LOGGER.error("%s is not a valid filepath!", filepath)
-            return None
-        return cls(safe_load(filepath.read_text()))
+            data = None
+        self._data = data
 
-    def get_(self, *path, **kwargs):
+    @property
+    def is_valid(self):
+        """Determine if configuration is valid"""
+        return self._data is not None
+
+    def get(self, *path, **kwargs):
         """Retrieve configuration value"""
-        value = self
-        default = kwargs.get('default', None)
-        for item in path:
-            value = value.get(item, None)
+        obj = self._data
+        components = [comp.split('.') for comp in path]
+        for item in components:
+            obj = obj.get(item, None)
             # value not found
-            if value is None:
-                LOGGER.warning(
-                    "configuration value not found: %s", '.'.join(path)
-                )
-                return default
+            if obj is None:
+                msg = ("configuration value not found: %s", '.'.join(path))
+                try:
+                    default = kwargs['default']
+                    LOGGER.warning(*msg)
+                    return default
+                except KeyError as exc:
+                    LOGGER.critical(*msg)
+                    raise DSConfigurationError(
+                        "configuration file is missing a mandatory value!"
+                    ) from exc
         # value found
         type_cls = kwargs.get('type', None)
         if type_cls:
-            return type_cls(value)
-        return value
-
-
-if not CONFIG_PATH.parent.is_dir():
-    CONFIG_PATH.parent.mkdir(parents=True, exist_ok=True)
-if not CONFIG_PATH.is_file():
-    CONFIG_PATH.write_text(
-        '\n'.join(
-            [
-                '#',
-                '# Datashark configuration file',
-                '#',
-            ]
-        )
-    )
-try:
-    CONFIG = Config.load(CONFIG_PATH)
-except:
-    LOGGER.exception(
-        "an exception occurred while loading configuration: %s", CONFIG_PATH
-    )
-    sys.exit(1)
+            return type_cls(obj)
+        return obj

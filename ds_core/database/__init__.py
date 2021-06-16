@@ -2,7 +2,7 @@
 """
 from enum import Enum
 from pprint import pformat
-from typing import Set, List, Dict, Union, Optional
+from typing import Union, List, Set, Dict
 from yarl import URL
 from .. import LOGGER
 from ..api import Artifact
@@ -142,7 +142,7 @@ def _get_or_make(session: Session, obj_cls, **kwargs):
     return obj_cls(**kwargs)
 
 
-def _backend_register_artifact(session: Session, artifact: Artifact):
+def backend_register_artifact(session: Session, artifact: Artifact):
     """Register artifact in database"""
     session.add(
         DSArtifact(
@@ -153,7 +153,7 @@ def _backend_register_artifact(session: Session, artifact: Artifact):
     )
 
 
-def _backend_register_artifact_tags(
+def backend_register_artifact_tags(
     session: Session,
     artifact: Artifact,
     tags: Union[List[str], Set[str]],
@@ -166,7 +166,7 @@ def _backend_register_artifact_tags(
     session.add(ds_artifact)
 
 
-def _backend_register_artifact_properties(
+def backend_register_artifact_properties(
     session: Session,
     artifact: Artifact,
     properties: Dict[str, Union[bytes, bytearray, str, int, float]],
@@ -178,56 +178,3 @@ def _backend_register_artifact_properties(
             DSArtifactProperty(key=key, value=str(value))
         )
     session.add(ds_artifact)
-
-
-def register_artifact(
-    session: Session,
-    fmt: Format,
-    artifact_path: str,
-    artifact_query: Optional[dict] = None,
-    encr: Optional[Encryption] = None,
-    comp: Optional[Compression] = None,
-    parent: Optional[Artifact] = None,
-) -> Artifact:
-    """Use this to register an artifact in the artifact database"""
-    scheme_parts = [fmt.value]
-    if encr:
-        scheme_parts.append(encr.value)
-    if comp:
-        scheme_parts.append(comp.value)
-    host = str(parent.uuid) if parent else Artifact.LOCALHOST
-    url = URL.build(
-        scheme='+'.join(scheme_parts),
-        host=host,
-        path=artifact_path,
-        query=artifact_query,
-    )
-    artifact = Artifact(url, parent)
-    _backend_register_artifact(session, artifact)
-    LOGGER.info("registered new artifact: %s", artifact)
-    enqueue_dispatch(artifact)
-    return artifact
-
-
-def register_artifact_tags(
-    session: Session,
-    artifact: Artifact,
-    tags: Union[List[str], Set[str]],
-):
-    """Add tags related to an artifact"""
-    _backend_register_artifact_tags(session, artifact, set(tags))
-    LOGGER.info("registered artifact tags: %s -> %s", artifact, tags)
-
-
-def register_artifact_properties(
-    session: Session,
-    artifact: Artifact,
-    properties: Dict[str, Union[bytes, bytearray, str, int, float]],
-):
-    """Add properties related to an artifact"""
-    _backend_register_artifact_properties(session, artifact, properties)
-    LOGGER.info(
-        "registered artifact properties: %s -> %s",
-        artifact,
-        pformat(properties),
-    )

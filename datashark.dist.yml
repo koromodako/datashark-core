@@ -1,0 +1,9 @@
+datashark:
+  # ------------------------------------------------------------------------[CORE]
+  core:
+    directory:
+      data: /home/user/datashark/data
+      temp: /home/user/datashark/temp
+      cache: /home/user/datashark/cache
+    database:
+      url: sqlite:////home/user/datashark/data/db.sqlite

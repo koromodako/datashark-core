@@ -5,19 +5,7 @@ from uuid import uuid4, UUID
 from pathlib import Path
 from typing import Optional
 from yarl import URL
-from .config import CONFIG
-from .platform import get_case_dir
-
-PROCESSING_DIR = Path(
-    CONFIG.get_(
-        'datashark',
-        'service',
-        'processing',
-        'directory',
-        type=Path,
-        default=get_case_dir('processing'),
-    )
-)
+from . import LOGGER
 
 
 class ArtifactURL:
@@ -63,12 +51,11 @@ class Artifact(dict):
         """Unique Identifier for this artifact"""
         return self['parent']
 
-    @property
-    def filepath(self) -> Path:
+    def filepath(self, temp_dir: Path) -> Path:
         """Artefact path in processing directory"""
         if self.url.host == self.LOCALHOST:
             return Path(self.url.path)
-        return PROCESSING_DIR / str(self.uuid)
+        return temp_dir / str(self.uuid)
 
     @property
     def url(self) -> ArtifactURL:
