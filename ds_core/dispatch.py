@@ -4,9 +4,9 @@ from rq import Queue
 from . import LOGGER
 from .api import Artifact
 from .yara import matching_plugins
-from .config import DSConfiguration
+from .meta import PluginMeta
 from .redis import REDIS
-from .plugin.meta import PluginMeta
+from .config import DSConfiguration
 
 DS_PLUGIN_JOBS = Queue('ds_plugin_jobs', connection=REDIS)
 DS_DISPATCH_JOBS = Queue('ds_dispatch_jobs', connection=REDIS)
@@ -27,7 +27,7 @@ def _dispatch(config: DSConfiguration, artifact: Artifact):
     return jobs
 
 
-def enqueue_dispatch(config: DSConfiguration, artifact: Artifact):
+def dispatch(config: DSConfiguration, artifact: Artifact):
     """Enqueue a dispatch job"""
     job = DS_DISPATCH_JOBS.enqueue(_dispatch, args=(config, artifact))
     LOGGER.info("new dispatch job %s for %s", job.id, artifact)

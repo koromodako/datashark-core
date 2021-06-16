@@ -2,6 +2,7 @@
 """
 import re
 from abc import ABCMeta
+from .. import LOGGER
 
 NAME_RE = re.compile(r'\w+')
 
@@ -34,5 +35,6 @@ class PluginMeta(ABCMeta):
                 f"class '{name}' NAME already registered by another plugin!"
             )
         PluginMeta.REGISTERED[ns_name] = ncls
+        LOGGER.info("plugin registered: %s", ns_name)
         # finally return new class
         return ncls

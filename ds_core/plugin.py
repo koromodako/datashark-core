@@ -29,10 +29,11 @@ from typing import Callable, Set, List, Dict, Union, Optional
 from importlib.metadata import entry_points
 from textwrap import dedent
 from yarl import URL
-from .. import LOGGER, BANNER
-from ..api import Artifact, Result
-from ..config import DSConfiguration, DEFAULT_CONFIG_PATH
-from ..database import (
+from . import LOGGER, BANNER
+from .api import Artifact, Result
+from .config import DSConfiguration, DEFAULT_CONFIG_PATH
+from .dispatch import dispatch
+from .database import (
     Format,
     Session,
     Encryption,
@@ -41,8 +42,7 @@ from ..database import (
     backend_register_artifact_tags,
     backend_register_artifact_properties,
 )
-from ..database.object import init_database_session
-from ..dispatcher import enqueue_dispatch
+from .database.object import init_database_session
 
 
 class Plugin(metaclass=ABCMeta):
@@ -123,7 +123,7 @@ class Plugin(metaclass=ABCMeta):
         artifact = Artifact(url, parent)
         backend_register_artifact(self.session, artifact)
         LOGGER.info("registered new artifact: %s", artifact)
-        enqueue_dispatch(self.config, artifact)
+        dispatch(self.config, artifact)
         return artifact
 
     def register_artifact_tags(
@@ -151,12 +151,14 @@ class Plugin(metaclass=ABCMeta):
         )
 
 
-def load_installed_plugins():
+def load_installed_plugins() -> bool:
     """Dynamically load installed plugins"""
     eps = entry_points()
+    loaded = False
     for entry_point in eps.get('datashark_plugin', []):
-        LOGGER.debug("loading plugin %s ...", entry_point.name)
+        loaded = True
         entry_point.load()
+    return loaded
 
 
 def _test_app_parse_args():
@@ -182,7 +184,9 @@ def _test_app_parse_args():
     return args
 
 
-def generic_plugin_test_app(instanciate_func, fmt: Format):
+def generic_plugin_test_app(
+    instanciate_func: Callable[[DSConfiguration], Plugin], fmt: Format
+):
     """Common test function for plugins"""
     LOGGER.info(BANNER)
     args = _test_app_parse_args()

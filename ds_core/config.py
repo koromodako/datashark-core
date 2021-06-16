@@ -30,7 +30,12 @@ class DSConfiguration:
     def get(self, *path, **kwargs):
         """Retrieve configuration value"""
         obj = self._data
-        components = [comp.split('.') for comp in path]
+        components = []
+        for comp in path:
+            if '.' in comp:
+                components += comp.split('.')
+            else:
+                components.append(comp)
         for item in components:
             obj = obj.get(item, None)
             # value not found

@@ -6,7 +6,6 @@ from typing import Union, List, Set, Dict
 from yarl import URL
 from .. import LOGGER
 from ..api import Artifact
-from ..dispatcher import enqueue_dispatch
 from .object import (
     Session,
     DSArtifact,
