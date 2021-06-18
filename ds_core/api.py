@@ -2,25 +2,10 @@
 """
 from enum import Enum
 from uuid import uuid4, UUID
-from pathlib import Path
 from typing import Optional
+from pathlib import Path
 from yarl import URL
 from . import LOGGER
-
-
-class ArtifactURL:
-    """Artifact url"""
-
-    def __init__(self, url: URL):
-        self._url = url
-
-    @property
-    def url(self) -> URL:
-        return self._url
-
-    def as_path(self) -> Path:
-        """Wraps path part of the url into pathlib.Path"""
-        return Path(self._url.path)
 
 
 class Artifact(dict):
@@ -30,7 +15,7 @@ class Artifact(dict):
 
     def __init__(
         self,
-        url: ArtifactURL,
+        url: URL,
         parent: Optional['Artifact'] = None,
     ):
         super().__init__()
@@ -42,6 +27,11 @@ class Artifact(dict):
         return f"Artifact(uuid='{self.uuid}', parent='{self.parent}', url='{self.url.human_repr()}')"
 
     @property
+    def url(self) -> URL:
+        """URL of the artifact to be processed in its original context"""
+        return self['url']
+
+    @property
     def uuid(self) -> UUID:
         """Unique Identifier for this artifact"""
         return self['uuid']
@@ -51,16 +41,15 @@ class Artifact(dict):
         """Unique Identifier for this artifact"""
         return self['parent']
 
-    def filepath(self, temp_dir: Path) -> Path:
+    def filepath(self, temp_dir: Path = None) -> Path:
         """Artefact path in processing directory"""
         if self.url.host == self.LOCALHOST:
             return Path(self.url.path)
+        if not temp_dir:
+            raise ValueError(
+                "you must provide temp_dir argument if artifact url does not refer to a file on localhost."
+            )
         return temp_dir / str(self.uuid)
-
-    @property
-    def url(self) -> ArtifactURL:
-        """URL of the artifact to be processed in its original context"""
-        return self['url']
 
 
 class Status(Enum):

@@ -48,6 +48,11 @@ from .database.object import init_database_session
 class Plugin(metaclass=ABCMeta):
     """Plugin abstract class"""
 
+    YARA_MATCH_ALL = """
+    condition:
+        true
+    """
+
     def __init__(self, config: DSConfiguration):
         self._config = config
         self._session = None

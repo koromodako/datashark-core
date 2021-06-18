@@ -5,11 +5,11 @@ from . import LOGGER
 from .api import Artifact
 from .yara import matching_plugins
 from .meta import PluginMeta
-from .redis import REDIS
 from .config import DSConfiguration
+from .database.helper import CORE_REDIS
 
-DS_PLUGIN_JOBS = Queue('ds_plugin_jobs', connection=REDIS)
-DS_DISPATCH_JOBS = Queue('ds_dispatch_jobs', connection=REDIS)
+DS_PLUGIN_JOBS = Queue('ds_plugin_jobs', connection=CORE_REDIS)
+DS_DISPATCH_JOBS = Queue('ds_dispatch_jobs', connection=CORE_REDIS)
 
 
 def _process(name: str, artifact: Artifact):

@@ -1,5 +1,6 @@
 """Database object mappings
 """
+from yarl import URL
 from sqlalchemy import (
     Table,
     Column,
@@ -7,15 +8,9 @@ from sqlalchemy import (
     Text,
     ForeignKey,
 )
-from sqlalchemy.orm import (
-    Session,
-    relationship,
-    declarative_base,
-)
-from sqlalchemy.engine import create_engine
-from .. import LOGGER
-from ..redis import REDIS
+from sqlalchemy.orm import Session, relationship, declarative_base
 from ..config import DSConfiguration
+from .helper import generic_init_db_session
 
 
 Base = declarative_base()
@@ -61,12 +56,7 @@ class DSArtifact(Base):
 
 
 def init_database_session(config: DSConfiguration) -> Session:
-    LOGGER.info("waiting for init_database_session lock...")
-    with REDIS.lock('init_database_session.lock', blocking_timeout=None):
-        engine_url = config.get('datashark.core.database.url')
-        LOGGER.info("lock acquired, creating engine for: %s", engine_url)
-        engine = create_engine(engine_url)
-        LOGGER.info("creating database schema if necessary...")
-        Base.metadata.create_all(engine)
-        LOGGER.info("creating a new session...")
-        return Session(engine)
+    engine_url = config.get('datashark.core.database.url', type=URL)
+    if engine_url.scheme == 'redis':
+        raise ValueError("redis cannot be used as datashark database!")
+    return generic_init_db_session(engine_url, 'init_database_session.lock', Base)
