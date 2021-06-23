@@ -26,7 +26,6 @@ class PluginTemplate(Plugin, metaclass=PluginMeta):
 from abc import ABCMeta, abstractmethod
 from pprint import pformat
 from typing import Callable, Set, List, Dict, Union, Optional
-from importlib.metadata import entry_points
 from textwrap import dedent
 from yarl import URL
 from . import LOGGER, BANNER
@@ -35,7 +34,6 @@ from .config import DSConfiguration, DEFAULT_CONFIG_PATH
 from .dispatch import dispatch
 from .database import (
     Format,
-    Session,
     Encryption,
     Compression,
     backend_register_artifact,
@@ -154,16 +152,6 @@ class Plugin(metaclass=ABCMeta):
             artifact,
             pformat(properties),
         )
-
-
-def load_installed_plugins() -> bool:
-    """Dynamically load installed plugins"""
-    eps = entry_points()
-    loaded = False
-    for entry_point in eps.get('datashark_plugin', []):
-        loaded = True
-        entry_point.load()
-    return loaded
 
 
 def _test_app_parse_args():

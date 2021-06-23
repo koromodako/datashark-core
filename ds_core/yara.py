@@ -50,7 +50,7 @@ def matching_plugins(config: DSConfiguration, artifact: Artifact):
     compiled_cache_filepath = cache_dir / COMPILED_CACHE_FILENAME
     LOGGER.info("loading yara rules from cache...")
     rules = yara.load(str(compiled_cache_filepath))
-    filepath = artifact.filepath(config.get('datashark.core.directory.temp'))
+    filepath = artifact.filepath(config.get('datashark.core.directory.temp', type=Path))
     LOGGER.info("attempting to match rules against %s ...", filepath)
     results = rules.match(str(filepath), fast=True)
     matched = {result.rule for result in results}

@@ -2,7 +2,9 @@
 """
 import re
 from abc import ABCMeta
+from importlib.metadata import entry_points
 from .. import LOGGER
+from ..config import DSConfiguration
 
 NAME_RE = re.compile(r'\w+')
 
@@ -38,3 +40,22 @@ class PluginMeta(ABCMeta):
         LOGGER.info("plugin registered: %s", ns_name)
         # finally return new class
         return ncls
+
+
+def load_plugins() -> bool:
+    """Dynamically load installed plugins"""
+    eps = entry_points()
+    loaded = False
+    for entry_point in eps.get('datashark_plugin', []):
+        loaded = True
+        entry_point.load()
+    return loaded
+
+
+def load_plugin_instanciate_func(name: str):
+    eps = entry_points()
+    for entry_point in eps.get('datashark_plugin', []):
+        if entry_point.name == name:
+            instanciate_func = entry_point.load()
+            return instanciate_func
+    return None

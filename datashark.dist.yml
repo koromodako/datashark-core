@@ -1,9 +1,9 @@
 datashark:
-  # ------------------------------------------------------------------------[CORE]
-  core:
+  core: #-----------------------------------------------------------------[CORE]
     directory:
-      data: /home/user/datashark/data
-      temp: /home/user/datashark/temp
-      cache: /home/user/datashark/cache
+      data: /opt/datashark/data
+      temp: /opt/datashark/temp
+      cache: /opt/datashark/cache
     database:
+      # see https://docs.sqlalchemy.org/en/14/core/engines.html#database-urls
       url: sqlite:////home/user/datashark/data/db.sqlite
