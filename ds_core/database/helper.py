@@ -11,7 +11,10 @@ from ..filesystem import ensure_parent_dir
 
 CORE_REDIS = Redis()
 
-def generic_init_db_session(engine_url: URL, lock: str, base_cls) -> Union[Session, Redis]:
+
+def generic_init_db_session(
+    engine_url: URL, lock: str, base_cls
+) -> Union[Session, Redis]:
     LOGGER.info("waiting for init_database_session lock...")
     with CORE_REDIS.lock(lock, blocking_timeout=None):
         # ugly fix for sqlite file-backed database, yeah i'm not proud...

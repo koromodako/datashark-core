@@ -1,8 +1,10 @@
 """Yara-related helpers
 """
+from time import time
 from pathlib import Path
 from textwrap import dedent, indent
 import yara
+from humanize import naturaldelta
 from . import LOGGER
 from .api import Artifact
 from .meta import PluginMeta
@@ -50,9 +52,16 @@ def matching_plugins(config: DSConfiguration, artifact: Artifact):
     compiled_cache_filepath = cache_dir / COMPILED_CACHE_FILENAME
     LOGGER.info("loading yara rules from cache...")
     rules = yara.load(str(compiled_cache_filepath))
-    filepath = artifact.filepath(config.get('datashark.core.directory.temp', type=Path))
+    filepath = artifact.filepath(
+        config.get('datashark.core.directory.temp', type=Path)
+    )
     LOGGER.info("attempting to match rules against %s ...", filepath)
+    start_time = time()
     results = rules.match(str(filepath), fast=True)
     matched = {result.rule for result in results}
-    LOGGER.info("plugins matched: %s", matched)
+    LOGGER.info(
+        "plugins matched (took %s): %s",
+        naturaldelta(time() - start_time),
+        matched,
+    )
     return matched

@@ -34,8 +34,6 @@ from .config import DSConfiguration, DEFAULT_CONFIG_PATH
 from .dispatch import dispatch
 from .database import (
     Format,
-    Encryption,
-    Compression,
     backend_register_artifact,
     backend_register_artifact_tags,
     backend_register_artifact_properties,
@@ -106,16 +104,10 @@ class Plugin(metaclass=ABCMeta):
         fmt: Format,
         artifact_path: str,
         artifact_query: Optional[dict] = None,
-        encr: Optional[Encryption] = None,
-        comp: Optional[Compression] = None,
         parent: Optional[Artifact] = None,
     ) -> Artifact:
         """Use this to register an artifact in the artifact database"""
         scheme_parts = [fmt.value]
-        if encr:
-            scheme_parts.append(encr.value)
-        if comp:
-            scheme_parts.append(comp.value)
         host = str(parent.uuid) if parent else Artifact.LOCALHOST
         url = URL.build(
             scheme='+'.join(scheme_parts),
@@ -126,8 +118,11 @@ class Plugin(metaclass=ABCMeta):
         artifact = Artifact(url, parent)
         backend_register_artifact(self.session, artifact)
         LOGGER.info("registered new artifact: %s", artifact)
-        dispatch(self.config, artifact)
         return artifact
+
+    def dispatch_artifact(self, artifact: Artifact):
+        """Schedule artifact for dispatch processing"""
+        dispatch(self.config, artifact)
 
     def register_artifact_tags(
         self,

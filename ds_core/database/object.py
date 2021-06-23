@@ -29,6 +29,12 @@ class DSArtifactTag(Base):
     id = Column(Integer, primary_key=True)
     value = Column(Text, nullable=False, unique=True, index=True)
 
+    artifacts = relationship(
+        'DSArtifact',
+        secondary=artifact_tag_rel,
+        back_populates='tags',
+    )
+
 
 class DSArtifactProperty(Base):
     __tablename__ = 'property'
@@ -38,6 +44,7 @@ class DSArtifactProperty(Base):
     value = Column(Text, index=True)
 
     artifact_id = Column(Integer, ForeignKey('artifact.id'))
+    artifact = relationship('DSArtifact', back_populates='properties')
 
 
 class DSArtifact(Base):
@@ -51,12 +58,15 @@ class DSArtifact(Base):
     tags = relationship(
         'DSArtifactTag',
         secondary=artifact_tag_rel,
+        back_populates='artifacts',
     )
-    properties = relationship('DSArtifactProperty')
+    properties = relationship('DSArtifactProperty', back_populates='artifact')
 
 
 def init_database_session(config: DSConfiguration) -> Session:
     engine_url = config.get('datashark.core.database.url', type=URL)
     if engine_url.scheme == 'redis':
         raise ValueError("redis cannot be used as datashark database!")
-    return generic_init_db_session(engine_url, 'init_database_session.lock', Base)
+    return generic_init_db_session(
+        engine_url, 'init_database_session.lock', Base
+    )

@@ -41,9 +41,13 @@ class Artifact(dict):
         """Unique Identifier for this artifact"""
         return self['parent']
 
+    @property
+    def is_localhost(self):
+        return self.url.host == self.LOCALHOST
+
     def filepath(self, temp_dir: Path = None) -> Path:
         """Artefact path in processing directory"""
-        if self.url.host == self.LOCALHOST:
+        if self.is_localhost:
             return Path(self.url.path)
         if not temp_dir:
             raise ValueError(

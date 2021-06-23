@@ -4,6 +4,7 @@ from enum import Enum
 from pprint import pformat
 from typing import Union, List, Set, Dict
 from yarl import URL
+from sqlalchemy import select
 from .. import LOGGER
 from ..api import Artifact
 from .object import (
@@ -110,24 +111,6 @@ class Format(Enum):
     CPIO = 'cpio'
 
 
-class Encryption(Enum):
-    # LUKS
-    LUKS = 'luks'
-
-
-class Compression(Enum):
-    # XZ compression
-    XZ = 'xz'
-    # LZ4 compression
-    LZ4 = 'lz4'
-    # LZMA compression
-    LZMA = 'lzma'
-    # GZIP compression
-    GZIP = 'gzip'
-    # BZIP2 compression
-    BZIP2 = 'bzip2'
-
-
 def _get_one(session: Session, obj_cls, **kwargs):
     """Retrieve exactly one object from database or raise"""
     return session.query(obj_cls).filter_by(**kwargs).one()
@@ -159,9 +142,9 @@ def backend_register_artifact_tags(
 ):
     """Register artifact tags in database"""
     ds_artifact = _get_one(session, DSArtifact, uuid=str(artifact.uuid))
-    for tag in tags:
-        tag = _get_or_make(session, DSArtifactTag, value=tag)
-        ds_artifact.tags.append(tag)
+    ds_artifact.tags = [
+        _get_or_make(session, DSArtifactTag, value=tag) for tag in set(tags)
+    ]
     session.add(ds_artifact)
 
 
@@ -172,8 +155,8 @@ def backend_register_artifact_properties(
 ):
     """Register artifact properties in database"""
     ds_artifact = _get_one(session, DSArtifact, uuid=str(artifact.uuid))
-    for key, value in properties.items():
-        ds_artifact.properties.append(
-            DSArtifactProperty(key=key, value=str(value))
-        )
+    ds_artifact.properties = [
+        DSArtifactProperty(key=key, value=str(value))
+        for key, value in properties.items()
+    ]
     session.add(ds_artifact)
