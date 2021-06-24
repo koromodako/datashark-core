@@ -26,7 +26,7 @@ def generic_init_db_session(
             return Redis(host=engine_url.host, port=engine_url.port)
         else:
             engine_url = engine_url.human_repr()
-        LOGGER.info("lock acquired, creating engine for: %s", engine_url)
+        LOGGER.info("lock acquired, creating engine...")
         engine = create_engine(engine_url)
         LOGGER.info("creating database schema if necessary...")
         base_cls.metadata.create_all(engine)

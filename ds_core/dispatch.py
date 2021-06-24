@@ -41,9 +41,9 @@ def _dispatch_routine(config: DSConfiguration, artifact: Artifact):
                 _plugin_routine,
                 args=(name, config, artifact),
                 ttl=None,
-                job_timeout='1h',
-                result_ttl='1m',
-                failure_ttl='7d',
+                job_timeout=config.get('datashark.core.job.plugin.job_timeout'),
+                result_ttl=config.get('datashark.core.job.plugin.result_ttl'),
+                failure_ttl=config.get('datashark.core.job.plugin.failure_ttl'),
             )
             LOGGER.info(
                 "new plugin job[%s](name=%s, artifact=%s)",
@@ -59,9 +59,9 @@ def _dispatch_routine(config: DSConfiguration, artifact: Artifact):
             _cleanup_routine,
             args=(filepath,),
             ttl=None,
-            job_timeout='2m',
-            result_ttl='1m',
-            failure_ttl='7d',
+            job_timeout=config.get('datashark.core.job.cleanup.job_timeout'),
+            result_ttl=config.get('datashark.core.job.cleanup.result_ttl'),
+            failure_ttl=config.get('datashark.core.job.cleanup.failure_ttl'),
             depends_on=plugin_jobs,
         )
         LOGGER.info(
@@ -76,9 +76,9 @@ def dispatch(config: DSConfiguration, artifact: Artifact):
         _dispatch_routine,
         args=(config, artifact),
         ttl=None,
-        job_timeout='30m',
-        result_ttl='1m',
-        failure_ttl='7d',
+        job_timeout=config.get('datashark.core.job.dispatch.job_timeout'),
+        result_ttl=config.get('datashark.core.job.dispatch.result_ttl'),
+        failure_ttl=config.get('datashark.core.job.dispatch.failure_ttl'),
     )
     LOGGER.info("new dispatch job[%s](artifact=%s)", job.id, artifact)
     return job
