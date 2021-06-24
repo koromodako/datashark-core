@@ -53,7 +53,9 @@ def _dispatch_routine(config: DSConfiguration, artifact: Artifact):
         cleanup_job = DS_CLEANUP_JOBS.enqueue(
             _cleanup_routine, args=(filepath,), depends_on=plugin_jobs
         )
-        LOGGER.info("new cleanup job[%s](filepath=%s)", cleanup_job.id, filepath)
+        LOGGER.info(
+            "new cleanup job[%s](filepath=%s)", cleanup_job.id, filepath
+        )
     return plugin_jobs, cleanup_job
 
 
