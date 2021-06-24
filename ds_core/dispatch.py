@@ -38,7 +38,12 @@ def _dispatch_routine(config: DSConfiguration, artifact: Artifact):
         # enqueue jobs for matching plugins
         for name in matching_plugins(config, artifact):
             job = DS_PLUGIN_JOBS.enqueue(
-                _plugin_routine, args=(name, config, artifact)
+                _plugin_routine,
+                args=(name, config, artifact),
+                ttl=None,
+                job_timeout='1h',
+                result_ttl='1m',
+                failure_ttl='7d',
             )
             LOGGER.info(
                 "new plugin job[%s](name=%s, artifact=%s)",
@@ -51,7 +56,13 @@ def _dispatch_routine(config: DSConfiguration, artifact: Artifact):
     cleanup_job = None
     if not artifact.is_localhost:
         cleanup_job = DS_CLEANUP_JOBS.enqueue(
-            _cleanup_routine, args=(filepath,), depends_on=plugin_jobs
+            _cleanup_routine,
+            args=(filepath,),
+            ttl=None,
+            job_timeout='2m',
+            result_ttl='1m',
+            failure_ttl='7d',
+            depends_on=plugin_jobs,
         )
         LOGGER.info(
             "new cleanup job[%s](filepath=%s)", cleanup_job.id, filepath
@@ -61,6 +72,13 @@ def _dispatch_routine(config: DSConfiguration, artifact: Artifact):
 
 def dispatch(config: DSConfiguration, artifact: Artifact):
     """Enqueue a dispatch job"""
-    job = DS_DISPATCH_JOBS.enqueue(_dispatch_routine, args=(config, artifact))
+    job = DS_DISPATCH_JOBS.enqueue(
+        _dispatch_routine,
+        args=(config, artifact),
+        ttl=None,
+        job_timeout='30m',
+        result_ttl='1m',
+        failure_ttl='7d',
+    )
     LOGGER.info("new dispatch job[%s](artifact=%s)", job.id, artifact)
     return job
