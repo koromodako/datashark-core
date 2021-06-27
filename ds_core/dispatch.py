@@ -41,9 +41,13 @@ def _dispatch_routine(config: DSConfiguration, artifact: Artifact):
                 _plugin_routine,
                 args=(name, config, artifact),
                 ttl=None,
-                job_timeout=config.get('datashark.core.job.plugin.job_timeout'),
+                job_timeout=config.get(
+                    'datashark.core.job.plugin.job_timeout'
+                ),
                 result_ttl=config.get('datashark.core.job.plugin.result_ttl'),
-                failure_ttl=config.get('datashark.core.job.plugin.failure_ttl'),
+                failure_ttl=config.get(
+                    'datashark.core.job.plugin.failure_ttl'
+                ),
             )
             LOGGER.info(
                 "new plugin job[%s](name=%s, artifact=%s)",

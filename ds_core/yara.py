@@ -65,3 +65,15 @@ def matching_plugins(config: DSConfiguration, artifact: Artifact):
         matched,
     )
     return matched
+
+
+def match_sig(
+    config: DSConfiguration, artifact: Artifact, sig: bytes, offset: int = 0
+) -> bool:
+    filepath = artifact.filepath(
+        config.get('datashark.core.directory.temp', type=Path)
+    )
+    with filepath.open('rb') as fstream:
+        fstream.seek(offset)
+        data = fstream.read(len(sig))
+    return data == sig
