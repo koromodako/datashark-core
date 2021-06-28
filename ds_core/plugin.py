@@ -31,6 +31,7 @@ from yarl import URL
 from . import LOGGER, BANNER
 from .api import Artifact, Result
 from .config import DSConfiguration, DEFAULT_CONFIG_PATH
+from .logging import LOGGING_MANAGER
 from .dispatch import dispatch
 from .database import (
     Format,
@@ -156,6 +157,9 @@ def _test_app_parse_args():
 
     parser = ArgumentParser()
     parser.add_argument(
+        '--debug', '-d', action='store_true', help="Enable debugging"
+    )
+    parser.add_argument(
         '--config',
         '-c',
         type=Path,
@@ -168,6 +172,7 @@ def _test_app_parse_args():
         help="Path of the file to be used to test plugin",
     )
     args = parser.parse_args()
+    LOGGING_MANAGER.set_debug(args.debug)
     args.config = DSConfiguration(args.config)
     return args
 
