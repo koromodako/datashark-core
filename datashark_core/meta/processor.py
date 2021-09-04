@@ -14,6 +14,7 @@ class ProcessorMeta(ABCMeta):
 
     MANDATORY = {
         'NAME',
+        'PLATFORM',
         'ARGUMENTS',
         'DESCRIPTION',
     }

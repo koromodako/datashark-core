@@ -54,6 +54,7 @@ class ProcessorInterface(metaclass=ABCMeta):
         """Processor's name"""
         return Processor.build({
             'name': self.name,
+            'platform': getattr(self, 'PLATFORM'),
             'arguments': getattr(self, 'ARGUMENTS'),
             'description': getattr(self, 'DESCRIPTION'),
         })

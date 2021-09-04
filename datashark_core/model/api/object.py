@@ -7,7 +7,7 @@ from textwrap import dedent
 from dataclasses import dataclass
 
 class Kind(Enum):
-    """Type of argument"""
+    """Types of argument kind"""
     INT = 'int'
     STR = 'str'
     BOOL = 'bool'
@@ -22,6 +22,14 @@ KIND_CLASS_MAP = {
     Kind.PATH: Path,
     Kind.FLOAT: float,
 }
+
+
+class Platform(Enum):
+    """Types of platform"""
+    LINUX = 'Linux'
+    DARWIN = 'Darwin'
+    WINDOWS = 'Windows'
+    INDEPENDENT = 'Independent'
 
 
 @dataclass
@@ -67,6 +75,7 @@ class ProcessorArgument:
 class Processor:
     """Processor API object"""
     name: str
+    platform: Platform
     arguments: List[ProcessorArgument]
     description: Optional[str]
 
@@ -75,6 +84,7 @@ class Processor:
         """Build from dict"""
         kwargs = {
             'name': dct['name'],
+            'platform': Platform(dct['platform']),
             'arguments': [
                 ProcessorArgument.build(proc_arg)
                 for proc_arg in dct['arguments']
@@ -89,6 +99,7 @@ class Processor:
         """Convert to dict"""
         dct = {
             'name': self.name,
+            'platform': self.platform.value,
             'arguments': [proc_arg.as_dict() for proc_arg in self.arguments],
         }
         if self.description:

@@ -1,5 +1,6 @@
 """Configuration-related functions
 """
+from typing import Union
 from pathlib import Path
 from ruamel.yaml import safe_load
 from . import LOGGER
@@ -12,7 +13,8 @@ class DatasharkConfigurationError(Exception):
 class DatasharkConfiguration:
     """Configuration object"""
 
-    def __init__(self, filepath: Path):
+    def __init__(self, filepath: Union[Path, str]):
+        filepath = Path(filepath)
         if not filepath.is_file():
             LOGGER.error("%s is not a valid filepath!", filepath)
             self._data = None
