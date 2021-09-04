@@ -4,23 +4,20 @@ from pathlib import Path
 from ruamel.yaml import safe_load
 from . import LOGGER
 
-DEFAULT_CONFIG_PATH = Path.home() / '.config' / 'datashark' / 'datashark.yml'
 
-
-class DSConfigurationError(Exception):
+class DatasharkConfigurationError(Exception):
     """Error raised when a configuration error occurs"""
 
 
-class DSConfiguration:
+class DatasharkConfiguration:
     """Configuration object"""
 
     def __init__(self, filepath: Path):
-        if filepath.is_file():
-            data = safe_load(filepath.read_text())
-        else:
+        if not filepath.is_file():
             LOGGER.error("%s is not a valid filepath!", filepath)
-            data = None
-        self._data = data
+            self._data = None
+            return
+        self._data = safe_load(filepath.read_text())
 
     @property
     def is_valid(self):
@@ -47,7 +44,7 @@ class DSConfiguration:
                     return default
                 except KeyError as exc:
                     LOGGER.critical(*msg)
-                    raise DSConfigurationError(
+                    raise DatasharkConfigurationError(
                         "configuration file is missing a mandatory value!"
                     ) from exc
         # value found

@@ -1,7 +1,6 @@
 """Logging-related helpers
 """
-from logging import basicConfig, getLogger, DEBUG, INFO
-from rich.logging import RichHandler
+from logging import basicConfig, getLogger
 
 
 class LoggingManager:
@@ -10,7 +9,7 @@ class LoggingManager:
     def __init__(self, root):
         self._root = root
         self._loggers = {}
-        self._global_level = INFO
+        self._global_level = 'INFO'
 
     def _get_path(self, name=None):
         if not name:
@@ -23,7 +22,7 @@ class LoggingManager:
 
     def set_debug(self, enabled):
         """Enable debug for all loggers"""
-        self._global_level = DEBUG if enabled else INFO
+        self._global_level = 'DEBUG' if enabled else 'INFO'
         self._reconfigure_loggers()
 
     def get_logger(self, name=None):
@@ -37,16 +36,5 @@ class LoggingManager:
         return logger
 
 
-RICH_HANDLER = RichHandler(
-    omit_repeated_times=False,
-    rich_tracebacks=True,
-    markup=False,
-)
-RICH_HANDLER.setLevel(DEBUG)
-
-basicConfig(
-    format='%(message)s',
-    datefmt='[%Y-%m-%dT%H:%M:%S]',
-    handlers=[RICH_HANDLER],
-)
+basicConfig(format='%(message)s', datefmt='[%Y-%m-%dT%H:%M:%S]', level='DEBUG')
 LOGGING_MANAGER = LoggingManager('datashark')

@@ -4,22 +4,26 @@ import re
 from abc import ABCMeta
 from importlib.metadata import entry_points
 from .. import LOGGER
-from ..config import DSConfiguration
+
 
 NAME_RE = re.compile(r'\w+')
 
 
-class PluginMeta(ABCMeta):
+class ProcessorMeta(ABCMeta):
     """Datashark plugin metaclass"""
 
-    MANDATORY = {'NAME', 'DEPENDS_ON', 'DESCRIPTION', 'YARA_RULE_BODY'}
+    MANDATORY = {
+        'NAME',
+        'ARGUMENTS',
+        'DESCRIPTION',
+    }
     REGISTERED = {}
 
     def __new__(cls, name, bases, namespace, /, **kwargs):
         # build new class
         ncls = super().__new__(cls, name, bases, namespace, **kwargs)
         # perform mandatory attributes check
-        mandatory_attributes = PluginMeta.MANDATORY
+        mandatory_attributes = ProcessorMeta.MANDATORY
         for mandatory in mandatory_attributes:
             if mandatory in namespace:
                 continue
@@ -32,30 +36,24 @@ class PluginMeta(ABCMeta):
             raise ValueError(
                 f"class '{name}' NAME attribute must validate regexp '{NAME_RE.pattern}'!"
             )
-        if ns_name in PluginMeta.REGISTERED:
+        if ns_name in ProcessorMeta.REGISTERED:
             raise ValueError(
                 f"class '{name}' NAME already registered by another plugin!"
             )
-        PluginMeta.REGISTERED[ns_name] = ncls
+        ProcessorMeta.REGISTERED[ns_name] = ncls
         LOGGER.info("plugin registered: %s", ns_name)
         # finally return new class
         return ncls
 
 
-def load_plugins() -> bool:
-    """Dynamically load installed plugins"""
+def load_processors() -> bool:
+    """Dynamically load installed processors"""
     eps = entry_points()
     loaded = False
-    for entry_point in eps.get('datashark_plugin', []):
+    for entry_point in eps.get('datashark_processors', []):
         loaded = True
-        entry_point.load()
+        try:
+            entry_point.load()
+        except:
+            LOGGER.exception("failed to load processor: %s", entry_point)
     return loaded
-
-
-def load_plugin_instanciate_func(name: str):
-    eps = entry_points()
-    for entry_point in eps.get('datashark_plugin', []):
-        if entry_point.name == name:
-            instanciate_func = entry_point.load()
-            return instanciate_func
-    return None
