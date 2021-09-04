@@ -3,6 +3,7 @@
 from abc import ABCMeta, abstractmethod
 from time import time, gmtime
 from typing import List, Tuple, Optional
+from pathlib import Path
 from asyncio import Lock
 from .config import DatasharkConfiguration
 from .logging import LOGGING_MANAGER
@@ -29,10 +30,20 @@ class ProcessorInterface(metaclass=ABCMeta):
         self._session.close()
         self._session = None
 
-    @property
-    def name(self):
+    @classmethod
+    def name(cls):
         """Processor's name"""
-        return getattr(self, 'NAME')
+        return getattr(cls, 'NAME')
+
+    @classmethod
+    def processor(cls) -> Processor:
+        """Processor's name"""
+        return Processor.build({
+            'name': cls.name(),
+            'system': getattr(cls, 'SYSTEM'),
+            'arguments': getattr(cls, 'ARGUMENTS'),
+            'description': getattr(cls, 'DESCRIPTION'),
+        })
 
     @property
     def logger(self):
@@ -49,18 +60,10 @@ class ProcessorInterface(metaclass=ABCMeta):
         """Plugin's database session"""
         return self._session
 
-    @property
-    def processor(self) -> Processor:
-        """Processor's name"""
-        return Processor.build({
-            'name': self.name,
-            'platform': getattr(self, 'PLATFORM'),
-            'arguments': getattr(self, 'ARGUMENTS'),
-            'description': getattr(self, 'DESCRIPTION'),
-        })
-
     @abstractmethod
-    async def _run(self, arguments: List[ProcessorArgument]) -> Tuple[bool, Optional[str]]:
+    async def _run(
+        self, filepath: Path, arguments: List[ProcessorArgument]
+    ) -> Tuple[bool, Optional[str]]:
         """
         Classes implementing ProcessorInterface must implement this method
 
@@ -74,7 +77,9 @@ class ProcessorInterface(metaclass=ABCMeta):
         This method shall return a Tuple[status: bool, details: Optional[str]]
         """
 
-    async def run(self, arguments: List[ProcessorArgument]) -> ProcessorResult:
+    async def run(
+        self, filepath: Path, arguments: List[ProcessorArgument]
+    ) -> ProcessorResult:
         """
         Wrapper method for _run() adding duration information and
         building ProcessorResult instance
@@ -84,14 +89,14 @@ class ProcessorInterface(metaclass=ABCMeta):
             self._counter += 1
         start = time()
         self._logger.info(
-            "%s#%08d starting at %s", self.name, counter, gmtime(start)
+            "%s#%08d starting at %s", self.name(), counter, gmtime(start)
         )
-        status, details = await self._run(arguments)
+        status, details = await self._run(filepath, arguments)
         stop = time()
         duration = stop - start
         self._logger.info(
             "%s#%08d stopping at %s (duration %d seconds)",
-            self.name,
+            self.name(),
             counter,
             gmtime(stop),
             duration,

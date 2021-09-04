@@ -54,3 +54,16 @@ class DatasharkConfiguration:
         if type_cls:
             return type_cls(obj)
         return obj
+
+
+def override_arg(arg, config, config_key, default):
+    """Select best argument based on given arguments"""
+    if arg:
+        return arg
+    if config:
+        config_val = config.get(config_key, default=None)
+        if config_val:
+            return config_val
+    if callable(default):
+        return default()
+    return default

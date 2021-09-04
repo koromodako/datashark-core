@@ -1,9 +1,18 @@
 """Datashark API objects
 """
+from os import cpu_count
 from enum import Enum
 from typing import List, Optional
 from pathlib import Path
 from textwrap import dedent
+from platform import (
+    node,
+    system,
+    machine,
+    platform,
+    processor,
+    python_version,
+)
 from dataclasses import dataclass
 
 class Kind(Enum):
@@ -24,13 +33,14 @@ KIND_CLASS_MAP = {
 }
 
 
-class Platform(Enum):
-    """Types of platform"""
+class System(Enum):
+    """Types of systems"""
     LINUX = 'Linux'
     DARWIN = 'Darwin'
     WINDOWS = 'Windows'
     INDEPENDENT = 'Independent'
 
+COMPATIBLE_SYSTEMS = [System(system()), System.INDEPENDENT]
 
 @dataclass
 class ProcessorArgument:
@@ -75,7 +85,7 @@ class ProcessorArgument:
 class Processor:
     """Processor API object"""
     name: str
-    platform: Platform
+    system: System
     arguments: List[ProcessorArgument]
     description: Optional[str]
 
@@ -84,7 +94,7 @@ class Processor:
         """Build from dict"""
         kwargs = {
             'name': dct['name'],
-            'platform': Platform(dct['platform']),
+            'system': System(dct['system']),
             'arguments': [
                 ProcessorArgument.build(proc_arg)
                 for proc_arg in dct['arguments']
@@ -99,7 +109,7 @@ class Processor:
         """Convert to dict"""
         dct = {
             'name': self.name,
-            'platform': self.platform.value,
+            'system': self.system.value,
             'arguments': [proc_arg.as_dict() for proc_arg in self.arguments],
         }
         if self.description:
@@ -132,6 +142,43 @@ class ProcessorResult:
         if self.details:
             dct['details'] = self.details
         return dct
+
+
+@dataclass
+class AgentInfoResponse:
+    """Agent information response"""
+    node: str
+    system: str
+    machine: str
+    platform: str
+    processor: str
+    cpu_count: int
+    python_version: str
+
+    @classmethod
+    def build(cls, dct):
+        """Build from dict"""
+        return cls(
+            node=dct.get('node', node()),
+            system=dct.get('system', system()),
+            machine=dct.get('machine', machine()),
+            platform=dct.get('platform', platform()),
+            processor=dct.get('processor', processor()),
+            cpu_count=dct.get('cpu_count', cpu_count()),
+            python_version=dct.get('python_version', python_version()),
+        )
+
+    def as_dict(self):
+        """Convert to dict"""
+        return {
+            'node': self.node,
+            'system': self.system,
+            'machine': self.machine,
+            'platform': self.platform,
+            'processor': self.processor,
+            'cpu_count': self.cpu_count,
+            'python_version': self.python_version,
+        }
 
 
 @dataclass
@@ -194,20 +241,15 @@ class ProcessingRequest:
 @dataclass
 class ProcessingResponse:
     """Processing response"""
-    status: bool
-    details: str
+    result: ProcessorResult
 
     @classmethod
     def build(cls, dct):
         """Build from dict"""
-        return cls(
-            status=dct['status'],
-            details=dct['details'],
-        )
+        return cls(processor_result=dct['result'])
 
     def as_dict(self):
         """Convert to dict"""
         return {
-            'status': self.status,
-            'details': self.details,
+            'result': self.result.as_dict(),
         }
