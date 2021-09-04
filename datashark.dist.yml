@@ -1,22 +1,16 @@
 datashark:
   core: #-----------------------------------------------------------------[CORE]
-    job:
-      dispatch:
-        job_timeout: 30m
-        result_ttl: 1m
-        failure_ttl: 7d
-      plugin:
-        job_timeout: 1h
-        result_ttl: 1m
-        failure_ttl: 7d
-      cleanup:
-        job_timeout: 2m
-        result_ttl: 1m
-        failure_ttl: 7d
-    directory:
-      data: /opt/datashark/data
-      temp: /opt/datashark/temp
-      cache: /opt/datashark/cache
     database:
       # see https://docs.sqlalchemy.org/en/14/core/engines.html#database-urls
-      url: sqlite:////home/user/datashark/data/db.sqlite
+      # supported schemes:
+      #   postgresql://
+      #   postgresql+pg8000://
+      #   postgresql+psycopg2://
+      #   mysql://
+      #   mysql+mysqldb://
+      #   mysql+pymysql://
+      #   oracle://
+      #   oracle+cx_oracle://
+      #   mssql+pyodbc://
+      #   mssql+pymssql://
+      url: postgresql://user:password@host/datashark
