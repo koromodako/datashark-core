@@ -38,12 +38,14 @@ class ProcessorInterface(metaclass=ABCMeta):
     @classmethod
     def processor(cls) -> Processor:
         """Processor's name"""
-        return Processor.build({
-            'name': cls.name(),
-            'system': getattr(cls, 'SYSTEM'),
-            'arguments': getattr(cls, 'ARGUMENTS'),
-            'description': getattr(cls, 'DESCRIPTION'),
-        })
+        return Processor.build(
+            {
+                'name': cls.name(),
+                'system': getattr(cls, 'SYSTEM'),
+                'arguments': getattr(cls, 'ARGUMENTS'),
+                'description': getattr(cls, 'DESCRIPTION'),
+            }
+        )
 
     @property
     def logger(self):
@@ -101,8 +103,10 @@ class ProcessorInterface(metaclass=ABCMeta):
             gmtime(stop),
             duration,
         )
-        return ProcessorResult.build({
-            'status': status,
-            'duration': duration,
-            'details': details,
-        })
+        return ProcessorResult.build(
+            {
+                'status': status,
+                'duration': duration,
+                'details': details,
+            }
+        )

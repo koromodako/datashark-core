@@ -20,6 +20,7 @@ class User(Base):
     """
     A user
     """
+
     __tablename__ = 'user'
     # attributes
     id = Column(Integer, primary_key=True)
@@ -32,6 +33,7 @@ class Case(Base):
     """
     A case
     """
+
     __tablename__ = 'case'
     # attributes
     id = Column(Integer, primary_key=True)
@@ -45,10 +47,9 @@ class Contribution(Base):
     """
     Datashark contribution linking a user to a case (will add roles in the future)
     """
+
     __tablename__ = 'contribution'
-    __table_args__ = (
-        UniqueConstraint('user_id', 'case_id'),
-    )
+    __table_args__ = (UniqueConstraint('user_id', 'case_id'),)
     # attributes
     id = Column(Integer, primary_key=True)
     user_id = Column(Integer, ForeignKey('user.id'))
@@ -62,6 +63,7 @@ class OS(enum.Enum):
     """
     OS enumeration
     """
+
     LINUX = 'linux'
     MACOS = 'macos'
     WINDOWS = 'windows'
@@ -71,6 +73,7 @@ class HostUID(Base):
     """
     Host unique identifier
     """
+
     __tablename__ = 'host_uid'
     # attributes
     id = Column(Integer, primary_key=True)
@@ -84,6 +87,7 @@ class UserUID(Base):
     """
     User unique identifier
     """
+
     __tablename__ = 'user_uid'
     # attributes
     id = Column(Integer, primary_key=True)
@@ -96,6 +100,7 @@ class Source(Base):
     """
     An artifact source related to a case, a host uid and possibly a user uid
     """
+
     __tablename__ = 'source'
     __table_args__ = (
         UniqueConstraint('case_id', 'host_uid_id', 'user_uid_id'),
@@ -116,11 +121,14 @@ class Event(Base):
     """
     An event with properties linked to an artifact
     """
+
     __tablename__ = 'event'
     # attributes
     id = Column(Integer, primary_key=True)
     datetime = Column(DateTime, nullable=False, index=True)
-    artifact_id = Column(Integer, ForeignKey('artifact.id'), nullable=False, index=True)
+    artifact_id = Column(
+        Integer, ForeignKey('artifact.id'), nullable=False, index=True
+    )
     # relationships
     artifact = relationship('Artifact', back_populates='events')
     properties = relationship('Property', back_populates='event')
@@ -130,6 +138,7 @@ class Artifact(Base):
     """
     An artifact with properties linked to a source, possibly linked to events
     """
+
     __tablename__ = 'artifact'
     # attributes
     id = Column(Integer, primary_key=True)
@@ -145,6 +154,7 @@ class PropertyName(Base):
     """
     Property name
     """
+
     __tablename__ = 'property_name'
     # attributes
     id = Column(Integer, primary_key=True)
@@ -157,6 +167,7 @@ class PropertyValue(Base):
     """
     Property value
     """
+
     __tablename__ = 'property_value'
     # attributes
     id = Column(Integer, primary_key=True)
@@ -169,6 +180,7 @@ class Property(Base):
     """
     Property linking a parent (event or artifact) to a name and value
     """
+
     __tablename__ = 'property'
     # attributes
     id = Column(Integer, primary_key=True)

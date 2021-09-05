@@ -15,8 +15,10 @@ from platform import (
 )
 from dataclasses import dataclass
 
+
 class Kind(Enum):
     """Types of argument kind"""
+
     INT = 'int'
     STR = 'str'
     BOOL = 'bool'
@@ -35,16 +37,20 @@ KIND_CLASS_MAP = {
 
 class System(Enum):
     """Types of systems"""
+
     LINUX = 'Linux'
     DARWIN = 'Darwin'
     WINDOWS = 'Windows'
     INDEPENDENT = 'Independent'
 
+
 COMPATIBLE_SYSTEMS = [System(system()), System.INDEPENDENT]
+
 
 @dataclass
 class ProcessorArgument:
     """Processor argument API object"""
+
     name: str
     kind: Kind
     value: Optional[str] = None
@@ -84,6 +90,7 @@ class ProcessorArgument:
 @dataclass
 class Processor:
     """Processor API object"""
+
     name: str
     system: System
     arguments: List[ProcessorArgument]
@@ -120,6 +127,7 @@ class Processor:
 @dataclass
 class ProcessorResult:
     """Processing response"""
+
     status: bool
     duration: float
     details: Optional[str]
@@ -147,6 +155,7 @@ class ProcessorResult:
 @dataclass
 class AgentInfoResponse:
     """Agent information response"""
+
     node: str
     system: str
     machine: str
@@ -184,6 +193,7 @@ class AgentInfoResponse:
 @dataclass
 class ProcessorsRequest:
     """Processors request"""
+
     search: Optional[str] = None
 
     @classmethod
@@ -202,6 +212,7 @@ class ProcessorsRequest:
 @dataclass
 class ProcessorsResponse:
     """Processors response"""
+
     processors: List[Processor]
 
     @classmethod
@@ -219,6 +230,7 @@ class ProcessorsResponse:
 @dataclass
 class ProcessingRequest:
     """Processing request"""
+
     filepath: Path
     processor: Processor
 
@@ -241,6 +253,7 @@ class ProcessingRequest:
 @dataclass
 class ProcessingResponse:
     """Processing response"""
+
     result: ProcessorResult
 
     @classmethod
