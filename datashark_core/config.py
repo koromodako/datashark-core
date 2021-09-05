@@ -56,7 +56,7 @@ class DatasharkConfiguration:
         return obj
 
 
-def override_arg(arg, config, config_key, default):
+def override_arg(arg, config, config_key, default=None):
     """Select best argument based on given arguments"""
     if arg:
         return arg

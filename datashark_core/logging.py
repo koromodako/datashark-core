@@ -36,5 +36,9 @@ class LoggingManager:
         return logger
 
 
-basicConfig(format='%(message)s', datefmt='[%Y-%m-%dT%H:%M:%S]', level='DEBUG')
+basicConfig(
+    format='[%(levelname)8s]: %(message)s',
+    datefmt='[%Y-%m-%dT%H:%M:%S]',
+    level='DEBUG',
+)
 LOGGING_MANAGER = LoggingManager('datashark')

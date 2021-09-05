@@ -143,7 +143,7 @@ class Artifact(Base):
     # attributes
     id = Column(Integer, primary_key=True)
     slug = Column(Text, nullable=False, unique=True, index=True)
-    source_id = Column(Integer, ForeignKey('source.id'), primary_key=True)
+    source_id = Column(Integer, ForeignKey('source.id'), unique=True, index=True)
     # relationships
     source = relationship('Source', back_populates='artifacts')
     events = relationship('Event', back_populates='artifact')
@@ -189,7 +189,7 @@ class Property(Base):
     artifact_id = Column(Integer, ForeignKey('artifact.id'), nullable=True)
     ## name & value
     name_id = Column(Integer, ForeignKey('property_name.id'), nullable=False)
-    value_id = Column(Integer, ForeignKey('value.id'), nullable=False)
+    value_id = Column(Integer, ForeignKey('property_value.id'), nullable=False)
     # relationships
     event = relationship('Event', back_populates='properties')
     artifact = relationship('Artifact', back_populates='properties')
