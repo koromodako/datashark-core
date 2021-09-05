@@ -2,7 +2,7 @@
 """
 import re
 from abc import ABCMeta
-from typing import Generator
+from typing import Iterator
 from importlib.metadata import entry_points
 from .. import LOGGER
 from ..processor import ProcessorInterface
@@ -75,7 +75,7 @@ def load_processors() -> bool:
     return loaded
 
 
-def enumerate_processor_classes() -> Generator[ProcessorInterface]:
+def enumerate_processor_classes() -> Iterator[ProcessorInterface]:
     """Enumerate loaded processors"""
     for processor_class in ProcessorMeta.REGISTERED.values():
         yield processor_class

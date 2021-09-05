@@ -1,7 +1,8 @@
 """Database-related helpers
 """
 from yarl import URL
-from sqlalchemy.orm import Session, create_engine
+from sqlalchemy import create_engine
+from sqlalchemy.orm import Session
 from ... import LOGGER
 from ...config import DatasharkConfiguration
 from .object import Base
