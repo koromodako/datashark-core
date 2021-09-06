@@ -1,10 +1,10 @@
 '''Processor-related helpers
 '''
 from abc import ABCMeta, abstractmethod
-from time import time, gmtime
+from uuid import uuid4
+from time import time, gmtime, strftime
 from typing import List, Tuple, Optional
 from pathlib import Path
-from asyncio import Lock
 from .config import DatasharkConfiguration
 from .logging import LOGGING_MANAGER
 from .model.api import Processor, ProcessorResult, ProcessorArgument
@@ -15,12 +15,11 @@ class ProcessorInterface(metaclass=ABCMeta):
     """Processor generic interface"""
 
     def __init__(self, config: DatasharkConfiguration, engine):
+        self._uid = str(uuid4())
         self._config = config
         self._logger = LOGGING_MANAGER.get_logger(self.name)
         self._engine = engine
         self._session = None
-        self._counter = 0
-        self._counter_lock = Lock()
 
     def __enter__(self):
         self._session = create_database_session(self._engine)
@@ -48,8 +47,13 @@ class ProcessorInterface(metaclass=ABCMeta):
         )
 
     @property
+    def uid(self):
+        """Processor instance's uuid"""
+        return self._uid
+
+    @property
     def logger(self):
-        """Processor's logger"""
+        """Processor instance's logger"""
         return self._logger
 
     @property
@@ -59,7 +63,7 @@ class ProcessorInterface(metaclass=ABCMeta):
 
     @property
     def session(self):
-        """Plugin's database session"""
+        """Processor instance's database session"""
         return self._session
 
     @abstractmethod
@@ -86,27 +90,22 @@ class ProcessorInterface(metaclass=ABCMeta):
         Wrapper method for _run() adding duration information and
         building ProcessorResult instance
         """
-        async with self._counter_lock:
-            counter = self._counter
-            self._counter += 1
         start = time()
+        start_time = strftime("%Y-%m-%dT%H:%M:%S+00:00", gmtime(start))
         self._logger.info(
-            "%s#%08d starting at %s", self.name(), counter, gmtime(start)
+            "%s#%s starting at %s", self.name(), self.uid, start_time
         )
         status, details = await self._run(filepath, arguments)
         stop = time()
+        stop_time = strftime("%Y-%m-%dT%H:%M:%S+00:00", gmtime(stop))
         duration = stop - start
         self._logger.info(
-            "%s#%08d stopping at %s (duration %d seconds)",
+            "%s#%s stopping at %s (duration %d seconds)",
             self.name(),
-            counter,
-            gmtime(stop),
+            self.uid,
+            stop_time,
             duration,
         )
-        return ProcessorResult.build(
-            {
-                'status': status,
-                'duration': duration,
-                'details': details,
-            }
+        return ProcessorResult(
+            status=status, duration=duration, details=details
         )
