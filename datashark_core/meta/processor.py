@@ -34,18 +34,6 @@ class ProcessorMeta(ABCMeta):
             raise NotImplementedError(
                 f"processor error: {name} (undefined mandatory attribute: {mandatory})"
             )
-        # perform system check
-        ns_system = namespace['SYSTEM']
-        if not isinstance(ns_system, System):
-            raise ValueError(
-                f"processor error: {name} (SYSTEM attribute must be a System instance)"
-            )
-        if ns_system not in COMPATIBLE_SYSTEMS:
-            LOGGER.warning(
-                "processor skipped: %s (not supported by current system)",
-                name,
-            )
-            return ncls
         # perform name check
         ns_name = namespace['NAME']
         if not NAME_RE.fullmatch(ns_name):
@@ -56,6 +44,19 @@ class ProcessorMeta(ABCMeta):
             raise ValueError(
                 f"processor error: {name} (NAME attribute already registered by another processor)"
             )
+        # perform system check
+        ns_system = namespace['SYSTEM']
+        if not isinstance(ns_system, System):
+            raise ValueError(
+                f"processor error: {name} (SYSTEM attribute must be a System instance)"
+            )
+        if ns_system not in COMPATIBLE_SYSTEMS:
+            LOGGER.warning(
+                "processor skipped: %s (not supported by current system)",
+                ns_name,
+            )
+            return ncls
+        # all checks passed, register processor
         ProcessorMeta.REGISTERED[ns_name] = ncls
         LOGGER.info("processor registered: %s", ns_name)
         # finally return new class
