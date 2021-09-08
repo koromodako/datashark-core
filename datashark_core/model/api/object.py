@@ -90,7 +90,7 @@ class ProcessorArgument(APIObjectInterface):
         }
         description = dct.get('description')
         if description:
-            kwargs['description'] = dedent(description)
+            kwargs['description'] = dedent(description.strip())
         return cls(**kwargs)
 
     def as_dict(self):
@@ -116,6 +116,8 @@ class ProcessorArgument(APIObjectInterface):
 
     def get_value(self):
         """Get typed argument value"""
+        if self.value is None:
+            return self.value
         kind_cls = KIND_CLASS_MAP[self.kind]
         return kind_cls(self.value)
 
@@ -300,24 +302,16 @@ class ProcessorsResponse(APIObjectInterface):
 @dataclass
 class ProcessingRequest(APIObjectInterface):
     """Processing request"""
-
-    filepath: Path
     processor: Processor
 
     @classmethod
     def build(cls, dct):
         """Build object from dict"""
-        return cls(
-            filepath=Path(dct['filepath']),
-            processor=Processor.build(dct['processor']),
-        )
+        return cls(processor=Processor.build(dct['processor']))
 
     def as_dict(self):
         """Convert object to dict"""
-        return {
-            'filepath': str(self.filepath),
-            'processor': self.processor.as_dict(),
-        }
+        return {'processor': self.processor.as_dict()}
 
 
 @dataclass
@@ -333,6 +327,4 @@ class ProcessingResponse(APIObjectInterface):
 
     def as_dict(self):
         """Convert object to dict"""
-        return {
-            'result': self.result.as_dict(),
-        }
+        return {'result': self.result.as_dict()}

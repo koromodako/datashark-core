@@ -3,12 +3,20 @@
 from abc import ABCMeta, abstractmethod
 from uuid import uuid4
 from time import time, gmtime, strftime
-from typing import List, Tuple, Optional
+from typing import List, Dict, Optional
 from pathlib import Path
-from .config import DatasharkConfiguration
+from asyncio import create_subprocess_exec
+from .config import (
+    DatasharkConfiguration,
+    DatasharkConfigurationError,
+)
 from .logging import LOGGING_MANAGER
 from .model.api import Processor, ProcessorResult, ProcessorArgument
 from .model.database.helper import create_database_session
+
+
+class ProcessorError(Exception):
+    """Raised from processor _run() method"""
 
 
 class ProcessorInterface(metaclass=ABCMeta):
@@ -67,9 +75,7 @@ class ProcessorInterface(metaclass=ABCMeta):
         return self._session
 
     @abstractmethod
-    async def _run(
-        self, filepath: Path, arguments: List[ProcessorArgument]
-    ) -> Tuple[bool, Optional[str]]:
+    async def _run(self, arguments: List[ProcessorArgument]):
         """
         Classes implementing ProcessorInterface must implement this method
 
@@ -80,12 +86,10 @@ class ProcessorInterface(metaclass=ABCMeta):
         3. Insert relevant objects (Artifact, Event and Property) in the DB
         4. Perform cleanup
 
-        This method shall return a Tuple[status: bool, details: Optional[str]]
+        This method can raise Processor error to notify that an error occured
         """
 
-    async def run(
-        self, filepath: Path, arguments: List[ProcessorArgument]
-    ) -> ProcessorResult:
+    async def run(self, arguments: List[ProcessorArgument]) -> ProcessorResult:
         """
         Wrapper method for _run() adding duration information and
         building ProcessorResult instance
@@ -95,7 +99,20 @@ class ProcessorInterface(metaclass=ABCMeta):
         self._logger.info(
             "%s#%s starting at %s", self.name(), self.uid, start_time
         )
-        status, details = await self._run(filepath, arguments)
+        status = False
+        details = None
+        try:
+            status, details = await self._run(arguments)
+        except ProcessorError as err:
+            details = str(err)
+        except DatasharkConfigurationError:
+            details = 'agent-side configuration file is invalid'
+        except:
+            details = 'unexpected exception, see agent-side event logs'
+            self._logger.exception(
+                "an unexpected exception was raised by processor: %s",
+                self.__class__.__name__,
+            )
         stop = time()
         stop_time = strftime("%Y-%m-%dT%H:%M:%S+00:00", gmtime(stop))
         duration = stop - start
@@ -109,3 +126,33 @@ class ProcessorInterface(metaclass=ABCMeta):
         return ProcessorResult(
             status=status, duration=duration, details=details
         )
+
+
+    async def _start_subprocess(
+        self,
+        prog_config_key: str,
+        base_args: List[str],
+        arg_option_map: Dict[str, Optional[str]],
+        arguments: List[ProcessorArgument],
+        /,
+        **kwargs,
+    ):
+        # find program in configuration and determine if it exists
+        program = self.config.get(prog_config_key, type=Path)
+        if not program.is_file():
+            raise ProcessorError("agent-side program not found!")
+        program = str(program)
+        # build program argument vector
+        for arg_name, cmd_option in arg_option_map:
+            for proc_arg in arguments:
+                if proc_arg.name != arg_name:
+                    continue
+                value = proc_arg.get_value()
+                if value is None:
+                    continue
+                if cmd_option:
+                    base_args.append(cmd_option)
+                base_args.append(value)
+        # start subprocess
+        self._logger.info("exec: %s -> %s", program, base_args)
+        return await create_subprocess_exec(program, base_args, **kwargs)
