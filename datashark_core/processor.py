@@ -11,7 +11,7 @@ from .config import (
     DatasharkConfigurationError,
 )
 from .logging import LOGGING_MANAGER
-from .model.api import Processor, ProcessorResult, ProcessorArgument
+from .model.api import Kind, Processor, ProcessorResult, ProcessorArgument
 from .model.database.helper import create_database_session
 
 
@@ -137,21 +137,35 @@ class ProcessorInterface(metaclass=ABCMeta):
         /,
         **kwargs,
     ):
+        # retrieve workdir and check access to it
+        workdir = self.config.get('datashark.agent.workdir')
+        if not workdir.is_dir():
+            raise ProcessorError("agent-side workdir not found!")
         # find program in configuration and determine if it exists
         program = self.config.get(prog_config_key, type=Path)
         if not program.is_file():
             raise ProcessorError("agent-side program not found!")
         program = str(program)
-        # build program argument vector
+        # build program arguments
         for arg_name, cmd_option in arg_option_map:
             for proc_arg in arguments:
+                # skip argument if not current arg in option_map which also
+                # happens to be a sequence of options to respect positional
+                # arguments positions
                 if proc_arg.name != arg_name:
                     continue
                 value = proc_arg.get_value()
+                # skip if no value
                 if value is None:
                     continue
+                # prepend workdir if argument is path
+                if proc_arg.kind == Kind.PATH:
+                    value = workdir / value
+                # if not positional argument, prepend optional argument value
+                # with optional argument name
                 if cmd_option:
                     base_args.append(cmd_option)
+                # append value to process arguments
                 base_args.append(value)
         # start subprocess
         self._logger.info("exec: %s -> %s", program, base_args)

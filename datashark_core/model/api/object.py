@@ -6,7 +6,6 @@ from enum import Enum
 from typing import List, Dict, Optional
 from pathlib import Path
 from textwrap import dedent, indent as indent_
-from operator import attrgetter
 from platform import (
     node,
     system,
@@ -17,7 +16,9 @@ from platform import (
 )
 from dataclasses import dataclass
 from ... import LOGGER
+from ...logging import cprint, COLORED
 
+INDENT_UNIT = 4 * ' '
 
 class Kind(Enum):
     """Types of argument kind"""
@@ -35,6 +36,14 @@ KIND_CLASS_MAP = {
     Kind.BOOL: lambda val: val.lower() not in ['false', 'no', '0'],
     Kind.PATH: Path,
     Kind.FLOAT: float,
+}
+
+KIND_COLOR_MAP = {
+    Kind.INT: 'slate_blue1',
+    Kind.STR: 'green',
+    Kind.BOOL: 'slate_blue1',
+    Kind.PATH: 'dodger_blue1',
+    Kind.FLOAT: 'slate_blue1',
 }
 
 
@@ -66,7 +75,9 @@ class APIObjectInterface(metaclass=ABCMeta):
         dct = self.as_dict()
         mkl = max([len(key) for key in dct.keys()])
         for key, value in dct.items():
-            print(f"{indent}{key:>{mkl}}: {value}")
+            key = f'{key:>{mkl}}:'
+            key = f'[b]{key}[/]' if COLORED else key
+            cprint(f"{indent}{key} {value}")
 
 
 @dataclass
@@ -90,7 +101,7 @@ class ProcessorArgument(APIObjectInterface):
         }
         description = dct.get('description')
         if description:
-            kwargs['description'] = dedent(description.strip())
+            kwargs['description'] = dedent(description.strip('\n'))
         return cls(**kwargs)
 
     def as_dict(self):
@@ -125,11 +136,18 @@ class ProcessorArgument(APIObjectInterface):
         """Return argument docstring"""
         name = self.name
         kind = self.kind.value
+        argument = f"{name}:{kind}"
+        argument = f"[b]{argument}[/]" if COLORED else argument
         value = f'"{self.value}"' if self.kind == Kind.STR else self.value
+        if COLORED:
+            color = KIND_COLOR_MAP[self.kind]
+            value = f"[{color}]{value}[/]"
         default = f" = {value}" if self.value is not None else ""
-        required = " [required]" if self.required else ""
-        description = indent_(self.description, "  ")
-        return f"{kind}:{name}{default}{required}\n{description}"
+        required = "[red](required)[/]" if COLORED else "(required)"
+        required = f" {required}" if self.required else ""
+        description = indent_(self.description, INDENT_UNIT)
+        description = f"[white]{description}[/]" if COLORED else description
+        return f"{argument}{default}{required}\n{description}"
 
 
 @dataclass
@@ -159,13 +177,12 @@ class Processor(APIObjectInterface):
 
     def as_dict(self):
         """Convert object to dict"""
-        arguments = list(
-            sorted(self.arguments.values(), key=attrgetter('name'))
-        )
         dct = {
             'name': self.name,
             'system': self.system.value,
-            'arguments': [proc_arg.as_dict() for proc_arg in arguments],
+            'arguments': [
+                proc_arg.as_dict() for proc_arg in self.arguments.values()
+            ],
         }
         if self.description:
             dct['description'] = self.description
@@ -187,13 +204,17 @@ class Processor(APIObjectInterface):
         """Return processor docstring"""
         name = self.name
         system_ = self.system.value
-        description = indent_(self.description, "  ")
-        intro = [f"{name} [{system_}]\n{description}"]
+        title = f"{name} ({system_})"
+        title = f"[b]{title}[/]" if COLORED else title
+        description = self.description
+        description = f"[white]{description}[/]" if COLORED else description
+        intro = f"{title}\n{description}"
         arguments = [
-            indent_(proc_arg.get_docstring(), "  ")
-            for proc_arg in self.arguments
+            indent_(proc_arg.get_docstring(), INDENT_UNIT)
+            for proc_arg in self.arguments.values()
         ]
-        return '\n'.join(intro + arguments)
+        arguments = "\n\n".join(arguments)
+        return f"{intro}\n{arguments}\n"
 
 
 @dataclass
