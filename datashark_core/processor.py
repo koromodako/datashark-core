@@ -105,7 +105,8 @@ class ProcessorInterface(metaclass=ABCMeta):
         status = False
         details = None
         try:
-            status, details = await self._run(arguments)
+            await self._run(arguments)
+            status = True
         except ProcessorError as err:
             details = str(err)
         except DatasharkConfigurationError:
