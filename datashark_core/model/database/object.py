@@ -143,7 +143,9 @@ class Artifact(Base):
     # attributes
     id = Column(Integer, primary_key=True)
     slug = Column(Text, nullable=False, unique=True, index=True)
-    source_id = Column(Integer, ForeignKey('source.id'), unique=True, index=True)
+    source_id = Column(
+        Integer, ForeignKey('source.id'), unique=True, index=True
+    )
     # relationships
     source = relationship('Source', back_populates='artifacts')
     events = relationship('Event', back_populates='artifact')

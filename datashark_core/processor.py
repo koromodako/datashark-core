@@ -12,6 +12,7 @@ from .config import (
 )
 from .logging import LOGGING_MANAGER
 from .model.api import Kind, Processor, ProcessorResult, ProcessorArgument
+from .filesystem import prepend_workdir
 from .model.database.helper import create_database_session
 
 
@@ -127,7 +128,6 @@ class ProcessorInterface(metaclass=ABCMeta):
             status=status, duration=duration, details=details
         )
 
-
     async def _start_subprocess(
         self,
         prog_config_key: str,
@@ -160,7 +160,7 @@ class ProcessorInterface(metaclass=ABCMeta):
                     continue
                 # prepend workdir if argument is path
                 if proc_arg.kind == Kind.PATH:
-                    value = workdir / value
+                    value = prepend_workdir(workdir, value)
                 # if not positional argument, prepend optional argument value
                 # with optional argument name
                 if cmd_option:

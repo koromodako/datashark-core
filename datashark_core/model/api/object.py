@@ -20,6 +20,7 @@ from ...logging import cprint, COLORED
 
 INDENT_UNIT = 4 * ' '
 
+
 class Kind(Enum):
     """Types of argument kind"""
 
@@ -61,6 +62,7 @@ COMPATIBLE_SYSTEMS = [System(system()), System.INDEPENDENT]
 
 class APIObjectInterface(metaclass=ABCMeta):
     """Abstract interface for objects exchanged through the API"""
+
     @classmethod
     @abstractmethod
     def build(cls, dct):
@@ -196,7 +198,9 @@ class Processor(APIObjectInterface):
         """Validate processor arguments"""
         for proc_arg in self.arguments.values():
             if not proc_arg.validate():
-                LOGGER.error("processor argument is required: %s", proc_arg.name)
+                LOGGER.error(
+                    "processor argument is required: %s", proc_arg.name
+                )
                 return False
         return True
 
@@ -323,6 +327,7 @@ class ProcessorsResponse(APIObjectInterface):
 @dataclass
 class ProcessingRequest(APIObjectInterface):
     """Processing request"""
+
     processor: Processor
 
     @classmethod

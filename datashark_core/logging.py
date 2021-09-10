@@ -1,39 +1,34 @@
 """Logging-related helpers
 """
 from logging import basicConfig, getLogger
-try:
-    from rich.console import Console
-    from rich.logging import RichHandler
+from rich.console import Console
+from rich.logging import RichHandler
 
-    RICH_HANDLER = RichHandler(
-        omit_repeated_times=False,
-        rich_tracebacks=True,
-        markup=False,
-    )
-    RICH_HANDLER.setLevel('DEBUG')
-    basicConfig(
-        format='%(message)s',
-        datefmt='[%Y-%m-%dT%H:%M:%S]',
-        level='DEBUG',
-        handlers=[RICH_HANDLER],
-    )
-    CONSOLE = Console()
-    COLORED = True
-except ImportError:
-    basicConfig(
-        format='[%(levelname)8s]: %(message)s',
-        level='DEBUG',
-    )
-    CONSOLE = None
-    COLORED = False
+RICH_HANDLER = RichHandler(
+    omit_repeated_times=False,
+    rich_tracebacks=True,
+    markup=False,
+)
+RICH_HANDLER.setLevel('DEBUG')
+basicConfig(
+    format='%(message)s',
+    datefmt='[%Y-%m-%dT%H:%M:%S]',
+    level='DEBUG',
+    handlers=[RICH_HANDLER],
+)
+CONSOLE = Console(highlight=False)
+COLORED = True
+
+
+def cwidth():
+    """Console width"""
+    return CONSOLE.width
 
 
 def cprint(*args, **kwargs):
     """Print function"""
-    if CONSOLE:
-        CONSOLE.print(*args, **kwargs)
-    else:
-        print(*args, **kwargs)
+    CONSOLE.print(*args, **kwargs)
+
 
 class LoggingManager:
     """Logging manager"""
@@ -66,5 +61,6 @@ class LoggingManager:
             logger.setLevel(self._global_level)
             self._loggers[path] = logger
         return logger
+
 
 LOGGING_MANAGER = LoggingManager('datashark')
