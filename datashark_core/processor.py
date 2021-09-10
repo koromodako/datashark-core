@@ -76,7 +76,7 @@ class ProcessorInterface(metaclass=ABCMeta):
         return self._session
 
     @abstractmethod
-    async def _run(self, arguments: List[ProcessorArgument]):
+    async def _run(self, arguments: Dict[str, ProcessorArgument]):
         """
         Classes implementing ProcessorInterface must implement this method
 
@@ -90,7 +90,9 @@ class ProcessorInterface(metaclass=ABCMeta):
         This method can raise Processor error to notify that an error occured
         """
 
-    async def run(self, arguments: List[ProcessorArgument]) -> ProcessorResult:
+    async def run(
+        self, arguments: Dict[str, ProcessorArgument]
+    ) -> ProcessorResult:
         """
         Wrapper method for _run() adding duration information and
         building ProcessorResult instance
@@ -133,12 +135,12 @@ class ProcessorInterface(metaclass=ABCMeta):
         prog_config_key: str,
         base_args: List[str],
         arg_option_map: Dict[str, Optional[str]],
-        arguments: List[ProcessorArgument],
+        arguments: Dict[str, ProcessorArgument],
         /,
         **kwargs,
     ):
         # retrieve workdir and check access to it
-        workdir = self.config.get('datashark.agent.workdir')
+        workdir = self.config.get('datashark.agent.workdir', type=Path)
         if not workdir.is_dir():
             raise ProcessorError("agent-side workdir not found!")
         # find program in configuration and determine if it exists
@@ -148,25 +150,20 @@ class ProcessorInterface(metaclass=ABCMeta):
         program = str(program)
         # build program arguments
         for arg_name, cmd_option in arg_option_map:
-            for proc_arg in arguments:
-                # skip argument if not current arg in option_map which also
-                # happens to be a sequence of options to respect positional
-                # arguments positions
-                if proc_arg.name != arg_name:
-                    continue
-                value = proc_arg.get_value()
-                # skip if no value
-                if value is None:
-                    continue
-                # prepend workdir if argument is path
-                if proc_arg.kind == Kind.PATH:
-                    value = prepend_workdir(workdir, value)
-                # if not positional argument, prepend optional argument value
-                # with optional argument name
-                if cmd_option:
-                    base_args.append(cmd_option)
-                # append value to process arguments
-                base_args.append(value)
+            proc_arg = arguments.get(arg_name)
+            value = proc_arg.get_value()
+            # skip if no value
+            if value is None:
+                continue
+            # prepend workdir if argument is path
+            if proc_arg.kind == Kind.PATH:
+                value = prepend_workdir(workdir, value)
+            # if not positional argument, prepend optional argument value
+            # with optional argument name
+            if cmd_option:
+                base_args.append(cmd_option)
+            # append value to process arguments
+            base_args.append(value)
         # start subprocess
         self._logger.info("exec: %s -> %s", program, base_args)
         return await create_subprocess_exec(program, base_args, **kwargs)
