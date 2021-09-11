@@ -2,14 +2,28 @@
 """
 from pathlib import Path
 from . import LOGGER
+from .config import DatasharkConfiguration
+
 
 def ensure_parent_dir(filepath: Path):
     """Ensure parent directory hierarchy exists for given filepath"""
     filepath.parent.mkdir(parents=True, exist_ok=True)
 
 
-def prepend_workdir(workdir: Path, relative_path: Path):
+def get_workdir(config: DatasharkConfiguration):
+    """Retrieve wordir from datashark configuration"""
+    workdir = config.get('datashark.agent.workdir', type=Path)
+    if not workdir.is_absolute():
+        raise ValueError("workdir shall be an absolute path!")
+    workdir = workdir.resolve()
+    if not workdir.is_dir():
+        raise ValueError("workdir shall be an existing directory!")
+    return workdir
+
+
+def prepend_workdir(config: DatasharkConfiguration, relative_path: Path):
     """Prepend workdir and prevent path traversal"""
+    workdir = get_workdir(config)
     filepath = (workdir / relative_path).resolve()
     if not filepath.is_relative_to(workdir):
         LOGGER.warning("workdir: %s", workdir)

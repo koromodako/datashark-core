@@ -107,7 +107,7 @@ class ProcessorInterface(metaclass=ABCMeta):
         try:
             await self._run(arguments)
             status = True
-        except ProcessorError as err:
+        except (ProcessorError, ValueError) as err:
             details = str(err)
         except DatasharkConfigurationError:
             details = 'agent-side configuration file is invalid'
@@ -140,10 +140,6 @@ class ProcessorInterface(metaclass=ABCMeta):
         /,
         **kwargs,
     ):
-        # retrieve workdir and check access to it
-        workdir = self.config.get('datashark.agent.workdir', type=Path)
-        if not workdir.is_dir():
-            raise ProcessorError("agent-side workdir not found!")
         # find program in configuration and determine if it exists
         program = self.config.get(prog_config_key, type=Path)
         if not program.is_file():
@@ -158,7 +154,7 @@ class ProcessorInterface(metaclass=ABCMeta):
                 continue
             # prepend workdir if argument is path
             if proc_arg.kind == Kind.PATH:
-                value = prepend_workdir(workdir, value)
+                value = prepend_workdir(self.config, value)
             # if not positional argument, prepend optional argument value
             # with optional argument name
             if cmd_option:
