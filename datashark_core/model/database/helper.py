@@ -3,6 +3,7 @@
 from yarl import URL
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
+from sqlalchemy.exc import OperationalError
 from ... import LOGGER
 from ...config import DatasharkConfiguration
 from .object import Base
@@ -22,7 +23,13 @@ def init_database_model(engine):
     Initialize database model
     """
     LOGGER.info("creating database schema if necessary...")
-    Base.metadata.create_all(engine)
+    status = False
+    try:
+        Base.metadata.create_all(engine)
+        status = True
+    except OperationalError:
+        LOGGER.exception("failed to initialize database model.")
+    return status
 
 
 def create_database_session(engine) -> Session:
