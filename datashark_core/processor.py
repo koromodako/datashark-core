@@ -75,6 +75,21 @@ class ProcessorInterface(metaclass=ABCMeta):
         """Processor instance's database session"""
         return self._session
 
+    def _log_info(self, fmt, *args):
+        """Log processor information"""
+        fmt = f"%s#%s: {fmt}"
+        self._logger.info(fmt, self.name(), self.uid, *args)
+
+    def _log_error(self, fmt, *args):
+        """Log processor error"""
+        fmt = f"%s#%s: {fmt}"
+        self._logger.error(fmt, self.name(), self.uid, *args)
+
+    def _log_exception(self, fmt, *args):
+        """Log processor exception"""
+        fmt = f"%s#%s: {fmt}"
+        self._logger.exception(fmt, self.name(), self.uid, *args)
+
     @abstractmethod
     async def _run(self, arguments: Dict[str, ProcessorArgument]):
         """
@@ -97,11 +112,14 @@ class ProcessorInterface(metaclass=ABCMeta):
         Wrapper method for _run() adding duration information and
         building ProcessorResult instance
         """
+        # memorize start time
         start = time()
         start_time = strftime("%Y-%m-%dT%H:%M:%S+00:00", gmtime(start))
-        self._logger.info(
-            "%s#%s starting at %s", self.name(), self.uid, start_time
-        )
+        # log information
+        self._log_info("starting: %s", start_time)
+        for arg_name, proc_arg in arguments.items():
+            self._log_info("argument: %s:%s", arg_name, proc_arg.get_value())
+        # start processing
         status = False
         details = None
         try:
@@ -109,23 +127,20 @@ class ProcessorInterface(metaclass=ABCMeta):
             status = True
         except (ProcessorError, ValueError) as err:
             details = str(err)
+            self._log_error("error: %s", details)
         except DatasharkConfigurationError:
             details = 'agent-side configuration file is invalid'
+            self._log_error("error: %s", details)
         except:
             details = 'unexpected exception, see agent-side event logs'
-            self._logger.exception(
-                "an unexpected exception was raised by processor: %s",
-                self.__class__.__name__,
-            )
+            self._log_exception("exception:")
+        # compute duration
         stop = time()
         stop_time = strftime("%Y-%m-%dT%H:%M:%S+00:00", gmtime(stop))
         duration = stop - start
-        self._logger.info(
-            "%s#%s stopping at %s (duration %d seconds)",
-            self.name(),
-            self.uid,
-            stop_time,
-            duration,
+        # log information
+        self._log_info(
+            "stopped: %s (duration %d seconds)", stop_time, duration
         )
         return ProcessorResult(
             status=status, duration=duration, details=details
@@ -171,5 +186,4 @@ class ProcessorInterface(metaclass=ABCMeta):
             # arguments
             base_args.append(value)
         # start subprocess
-        self._logger.info("exec: %s -> %s", program, base_args)
         return await create_subprocess_exec(program, base_args, **kwargs)
