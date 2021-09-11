@@ -162,8 +162,17 @@ class ProcessorInterface(metaclass=ABCMeta):
             # if not positional argument, prepend optional argument value
             # with optional argument name
             if cmd_option:
+                # special processing for optional boolean
+                if proc_arg.kind == Kind.BOOL and not value:
+                    continue
+                # add cmd_option part e.g. "--example" in "--exemple value"
                 base_args.append(cmd_option)
-            # append value to process arguments
+                # special processing for optional boolean
+                if proc_arg.kind == Kind.BOOL:
+                    continue
+            # append cmd option value to process arguments
+            # e.g. "value" in "--exemple value" or just "value" for positional
+            # arguments
             base_args.append(value)
         # start subprocess
         self._logger.info("exec: %s -> %s", program, base_args)
