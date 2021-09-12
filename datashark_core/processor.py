@@ -186,4 +186,4 @@ class ProcessorInterface(metaclass=ABCMeta):
             # arguments
             base_args.append(value)
         # start subprocess
-        return await create_subprocess_exec(program, base_args, **kwargs)
+        return await create_subprocess_exec(program, *base_args, **kwargs)
