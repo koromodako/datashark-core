@@ -7,6 +7,7 @@ from rich.logging import RichHandler
 RICH_HANDLER = RichHandler(
     omit_repeated_times=False,
     rich_tracebacks=True,
+    console=Console(stderr=True, highlight=False),
     markup=False,
 )
 RICH_HANDLER.setLevel('DEBUG')

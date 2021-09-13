@@ -187,3 +187,15 @@ class ProcessorInterface(metaclass=ABCMeta):
             base_args.append(value)
         # start subprocess
         return await create_subprocess_exec(program, *base_args, **kwargs)
+
+    async def _handle_communicating_process(self, proc):
+        """Generic handling of a regular communicating process"""
+        _, stderr = await proc.communicate()
+        if proc.returncode != 0:
+            if not stderr:
+                stderr = (
+                    "called program exited with code {proc.returncode} and "
+                    "did not provide any information on stderr, thank the "
+                    "developper for that."
+                )
+            raise ProcessorError(stderr)
