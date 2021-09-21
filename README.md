@@ -2,4 +2,4 @@
 
 ## Purpose
 
-This library provides datashark's framework.
+This library provides datashark's core features.
