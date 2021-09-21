@@ -1,6 +1,7 @@
 """Filesystem-related helpers
 """
 from pathlib import Path
+from tempfile import gettempdir
 from . import LOGGER
 from .config import DatasharkConfiguration
 
@@ -10,7 +11,12 @@ def ensure_parent_dir(filepath: Path):
     filepath.parent.mkdir(parents=True, exist_ok=True)
 
 
-def get_workdir(config: DatasharkConfiguration):
+def get_tempdir() -> Path:
+    """Retrieve temporary directory"""
+    return Path(gettempdir())
+
+
+def get_workdir(config: DatasharkConfiguration) -> Path:
     """Retrieve wordir from datashark configuration"""
     workdir = config.get('datashark.agent.workdir', type=Path)
     if not workdir.is_absolute():
@@ -21,7 +27,7 @@ def get_workdir(config: DatasharkConfiguration):
     return workdir
 
 
-def prepend_workdir(config: DatasharkConfiguration, relative_path: Path):
+def prepend_workdir(config: DatasharkConfiguration, relative_path: Path) -> Path:
     """Prepend workdir and prevent path traversal"""
     workdir = get_workdir(config)
     filepath = (workdir / relative_path).resolve()
