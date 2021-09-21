@@ -1,5 +1,5 @@
-# datashark-core
+# Datashark Core
 
-## Purpose
+This library provides Datashark's core features.
 
-This library provides datashark's core features.
+See [the documentation](https://koromodako.github.io/datashark/) to learn more about Datashark project.
