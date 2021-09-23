@@ -1,9 +1,17 @@
 """Configuration-related functions
 """
+from enum import Enum
 from typing import Union
 from pathlib import Path
 from ruamel.yaml import safe_load
 from . import LOGGER
+
+
+class DatasharkMode(Enum):
+    """Datashark deployment mode"""
+
+    STANDALONE = 'standalone'
+    COOPERATIVE = 'cooperative'
 
 
 class DatasharkConfigurationError(Exception):

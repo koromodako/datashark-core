@@ -27,7 +27,9 @@ def get_workdir(config: DatasharkConfiguration) -> Path:
     return workdir
 
 
-def prepend_workdir(config: DatasharkConfiguration, relative_path: Path) -> Path:
+def prepend_workdir(
+    config: DatasharkConfiguration, relative_path: Path
+) -> Path:
     """Prepend workdir and prevent path traversal"""
     workdir = get_workdir(config)
     filepath = (workdir / relative_path).resolve()
