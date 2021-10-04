@@ -1,22 +1,10 @@
 """Logging-related helpers
 """
 from logging import basicConfig, getLogger
+from logging.handlers import RotatingFileHandler
 from rich.console import Console
 from rich.logging import RichHandler
 
-RICH_HANDLER = RichHandler(
-    omit_repeated_times=False,
-    rich_tracebacks=True,
-    console=Console(stderr=True, highlight=False),
-    markup=False,
-)
-RICH_HANDLER.setLevel('DEBUG')
-basicConfig(
-    format='%(message)s',
-    datefmt='[%Y-%m-%dT%H:%M:%S]',
-    level='DEBUG',
-    handlers=[RICH_HANDLER],
-)
 CONSOLE = Console(highlight=False)
 COLORED = True
 
@@ -29,6 +17,34 @@ def cwidth():
 def cprint(*args, **kwargs):
     """Print function"""
     CONSOLE.print(*args, **kwargs)
+
+
+def build_rich_handler():
+    rich_handler = RichHandler(
+        omit_repeated_times=False,
+        rich_tracebacks=True,
+        console=Console(stderr=True, highlight=False),
+        markup=False,
+    )
+    rich_handler.setLevel('DEBUG')
+    return rich_handler
+
+
+def build_rotating_file_handler(logpath):
+    handler = RotatingFileHandler(logpath, maxBytes=16384000, backupCount=4)
+    return handler
+
+
+def setup_logging(log_to=None):
+    handler = (
+        build_rotating_file_handler(log_to) if log_to else build_rich_handler()
+    )
+    basicConfig(
+        format='%(message)s',
+        datefmt='[%Y-%m-%dT%H:%M:%S]',
+        level='DEBUG',
+        handlers=[handler],
+    )
 
 
 class LoggingManager:
