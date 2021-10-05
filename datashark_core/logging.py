@@ -36,14 +36,15 @@ def build_rotating_file_handler(logpath):
 
 
 def setup_logging(log_to=None):
-    handler = (
-        build_rotating_file_handler(log_to) if log_to else build_rich_handler()
-    )
+    datefmt = '[%Y-%m-%dT%H:%M:%S]'
+    if log_to:
+        msgfmt = '%(asctime)s(%(levelname)8s) %(message)s'
+        handler = build_rotating_file_handler(log_to)
+    else:
+        msgfmt = '%(message)s'
+        handler = build_rich_handler()
     basicConfig(
-        format='%(message)s',
-        datefmt='[%Y-%m-%dT%H:%M:%S]',
-        level='DEBUG',
-        handlers=[handler],
+        format=msgfmt, datefmt=datefmt, level='DEBUG', handlers=[handler]
     )
 
 
