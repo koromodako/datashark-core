@@ -190,7 +190,7 @@ class ProcessorInterface(metaclass=ABCMeta):
 
     async def _handle_communicating_process(self, proc):
         """Generic handling of a regular communicating process"""
-        _, stderr = await proc.communicate()
+        stdout, stderr = await proc.communicate()
         if proc.returncode != 0:
             if not stderr:
                 stderr = (
@@ -199,3 +199,4 @@ class ProcessorInterface(metaclass=ABCMeta):
                     "developper for that."
                 )
             raise ProcessorError(stderr)
+        return stdout, stderr
