@@ -28,11 +28,17 @@ class DatasharkConfiguration:
             self._data = None
             return
         self._data = safe_load(filepath.read_text())
+        self._filepath = filepath
 
     @property
     def is_valid(self):
         """Determine if configuration is valid"""
         return self._data is not None
+
+    @property
+    def filepath(self):
+        """Configuration filepath"""
+        return self._filepath
 
     def get(self, *path, **kwargs):
         """Retrieve configuration value"""
